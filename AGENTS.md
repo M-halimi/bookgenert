@@ -1,0 +1,53 @@
+# BookFlix — Agent Guide
+
+## Project Overview
+Netflix-style reading app built with Next.js 14 App Router. Users search for books, AI generates 6 bite-sized episodes per book, users read with a typing-effect reader.
+
+## Tech Stack
+- **Framework**: Next.js 14 (App Router, Server Components, API Routes)
+- **Styling**: Tailwind CSS v4 (CSS-first config, `@import "tailwindcss"`, no `tailwind.config.ts`)
+- **Client Interactivity**: React Client Components (`useState`, `useEffect`) — no Alpine.js
+- **AI**: Google Gemini API via `@google/generative-ai` (key in `GEMINI_API_KEY`)
+- **Metadata**: Open Library API (free, no key)
+
+## Project Structure
+```
+app/
+  layout.tsx              Root layout
+  page.tsx                Home page (search)
+  explore/page.tsx        Library page
+  book/[slug]/page.tsx    Episode list
+  read/[slug]/[ep]/page.tsx  Reader
+  api/generate/route.ts   Gemini API handler (server-only)
+components/
+  ui/                     Navbar, SearchBar, ProgressBar
+  library/                FilterChips, BookCard
+  reader/                 EpisodeCard, ReaderEngine
+lib/
+  utils.ts                slugify, formatReadTime
+  openlibrary.ts          Open Library wrappers
+  gemini.ts               Gemini SDK init
+```
+
+## Key Rules for AI
+
+1. **Server Components by default** — Only add `"use client"` when React hooks (`useState`, `useEffect`) are required.
+2. **API key safety** — `GEMINI_API_KEY` is only used in `app/api/generate/route.ts` and `lib/gemini.ts`. Never expose to client.
+3. **Interactivity via React** — Use React Client Components (`useState`, `useEffect`) for typing effects, filtering, progress. No Alpine.js.
+4. **Progress persistence** — Use `localStorage` in `useEffect`, keyed by `bookflix_progress`.
+5. **Gemini output validation** — Always validate Gemini returns strict JSON matching the schema in `lib/gemini.ts`.
+6. **Tailwind v4** — No `tailwind.config.ts`. All config via CSS. Use arbitrary values with `[--]` syntax where needed.
+
+## Commands
+```bash
+npm run dev       # Development server
+npm run build     # Production build
+npm run start     # Start production server
+```
+
+## Gemini Prompt Template
+- Role: Highly engaging reading companion
+- Divide subject into exactly 6 episodes (250-350 words each)
+- Style: Conversational, engaging, clear (no academic jargon)
+- Structure per episode: Hook -> 2-3 Core Ideas -> 1 Actionable Takeaway -> Cliffhanger
+- Output: STRICT JSON with title, author, category, tagline, episodes[]
