@@ -1,11 +1,7 @@
 export function slugify(text: string): string {
-  const cleaned = text
+  const latinized = text
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^\p{L}\p{N}\s-]/gu, '')
-    .trim();
-
-  const latinized = cleaned
     .replace(/[أإآا]/g, 'a')
     .replace(/[ب]/g, 'b')
     .replace(/[ت]/g, 't')
@@ -40,6 +36,8 @@ export function slugify(text: string): string {
     .replace(/[ء]/g, 'a');
 
   return latinized
+    .replace(/[^a-zA-Z0-9\s-]/g, '')
+    .trim()
     .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')

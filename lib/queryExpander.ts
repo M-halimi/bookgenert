@@ -145,8 +145,8 @@ export function expandQuery(query: string): ExpandedQuery {
     }
   }
 
-  const uniqueExpanded = [...new Set(expanded)].slice(0, 8);
-  const uniqueSemantic = [...new Set(semantic)].slice(0, 4);
+  const uniqueExpanded = Array.from(new Set(expanded)).slice(0, 8);
+  const uniqueSemantic = Array.from(new Set(semantic)).slice(0, 4);
 
   const langs: string[] = ['en'];
   if (isAr || langVariants.length > 0) langs.push('ar');
@@ -160,7 +160,7 @@ export function expandQuery(query: string): ExpandedQuery {
     intent,
     confidence,
     expanded_queries: uniqueExpanded,
-    language_variants: [...new Set(langs)],
+    language_variants: Array.from(new Set(langs)),
     search_strategy: {
       title_based: title,
       author_based: author || title,

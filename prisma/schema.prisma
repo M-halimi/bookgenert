@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String?  @unique
+  name      String?
+  image     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  books UserBook[]
+
+  @@map("users")
+}
+
+model Author {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique
+  slug      String   @unique
+  bio       String?  @db.Text
+  image     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  books Book[]
+
+  @@map("authors")
+}
+
+model Book {
+  id           String   @id @default(uuid()) @db.Uuid
+  slug         String   @unique
+  title        String
+  subtitle     String?
+  description  String?  @db.Text
+  summary      String?  @db.Text
+  tagline      String?
+  coverImage   String?  @map("cover_image")
+  category     String?
+  language     String   @default("en")
+  pageCount    Int?     @map("page_count")
+  publishYear  Int?     @map("publish_year")
+  source       String   @default("manual")
+  externalId   String?  @map("external_id")
+  episodes     Json?
+  moodAnalyzed Boolean  @default(false) @map("mood_analyzed")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  authorId String? @map("author_id") @db.Uuid
+  author   Author? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  moods BookMood[]
+  users UserBook[]
+
+  @@index([title])
+  @@index([category])
+  @@index([source])
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("books")
+}
+
+model Mood {
+  id           String   @id
+  label        String
+  emoji        String
+  description  String   @db.Text
+  color        String
+  keywords     Json
+  relatedMoods Json     @map("related_moods")
+  aiRules      String?  @map("ai_rules") @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  books BookMood[]
+
+  @@map("moods")
+}
+
+model BookMood {
+  bookId    String   @map("book_id") @db.Uuid
+  moodId    String   @map("mood_id")
+  score     Int
+  source    String   @default("ai")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  mood Mood @relation(fields: [moodId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, moodId])
+  @@index([moodId])
+  @@index([score])
+  @@map("book_mood")
+}
+
+model UserBook {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  bookId      String   @map("book_id") @db.Uuid
+  progress    Int      @default(0)
+  isSaved     Boolean  @default(false) @map("is_saved")
+  isLiked     Boolean  @default(false) @map("is_liked")
+  completed   Boolean  @default(false)
+  startedAt   DateTime @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@index([userId])
+  @@index([bookId])
+  @@map("user_books")
+}
+
+model ApiCache {
+  id        String   @id @default(uuid()) @db.Uuid
+  cacheKey  String   @unique @map("cache_key") @db.VarChar(255)
+  data      Json
+  source    String
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([expiresAt])
+  @@index([cacheKey])
+  @@map("api_cache")
+}

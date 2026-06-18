@@ -14,6 +14,7 @@ export interface BookMetadata {
   author: string;
   coverUrl: string | null;
   publishYear: number | null;
+  source?: string;
 }
 
 export async function searchBooks(query: string): Promise<BookMetadata[]> {
@@ -21,7 +22,7 @@ export async function searchBooks(query: string): Promise<BookMetadata[]> {
     `${OPEN_LIBRARY_BASE}/search.json?q=${encodeURIComponent(query)}&limit=10`
   );
   const data = await res.json();
-  return (data.docs || []).map((book: OpenLibraryBook) => ({
+    return (data.docs || []).map((book: OpenLibraryBook) => ({
     id: book.key.replace('/works/', ''),
     title: book.title,
     author: book.author_name?.[0] || 'Unknown Author',
@@ -29,6 +30,7 @@ export async function searchBooks(query: string): Promise<BookMetadata[]> {
       ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
       : null,
     publishYear: book.first_publish_year || null,
+    source: 'openlibrary',
   }));
 }
 
@@ -44,6 +46,7 @@ export async function getBookDetails(workId: string): Promise<BookMetadata | nul
       ? `https://covers.openlibrary.org/b/id/${data.covers[0]}-M.jpg`
       : null,
     publishYear: data.first_publish_year || null,
+    source: 'openlibrary',
   };
 }
 

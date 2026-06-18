@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import EpisodeCard from '@/components/reader/EpisodeCard';
 import ProgressBar from '@/components/ui/ProgressBar';
 import LangSwitcher from '@/components/ui/LangSwitcher';
 import type { BookEpisodes, LangCode } from '@/lib/groq';
+import { MOODS, type MoodId, type ScoredMood } from '@/lib/moods';
+import { assignMoods, classifyBook } from '@/lib/mood-store';
 
 interface LibraryEntry {
   slug: string;
@@ -15,6 +17,7 @@ interface LibraryEntry {
   category: string;
   tagline: string;
   coverUrl: string;
+  moods?: ScoredMood[];
 }
 
 export default function BookPage() {
@@ -23,8 +26,10 @@ export default function BookPage() {
   const slug = params.slug as string;
 
   const [data, setData] = useState<BookEpisodes | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [moodLoading, setMoodLoading] = useState(false);
+  const [moodMessage, setMoodMessage] = useState('');
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [lang, setLang] = useState<LangCode>('ar');
 
@@ -46,61 +51,109 @@ export default function BookPage() {
 
   useEffect(() => {
     if (!slug) return;
-
-    const cached = localStorage.getItem(`bookflix_episodes_${slug}`);
-    if (cached) {
-      setData(JSON.parse(cached));
-      setLoading(false);
-      return;
-    }
-
-    const fetchEpisodes = async () => {
-      try {
-        const res = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, author: author || undefined, lang }),
-        });
-
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || 'Generation failed');
-        }
-
-        const episodes: BookEpisodes = await res.json();
-        setData(episodes);
-
-        localStorage.setItem(
-          `bookflix_episodes_${slug}`,
-          JSON.stringify(episodes)
-        );
-
-        try {
-          const library = JSON.parse(
-            localStorage.getItem('bookflix_library') || '[]'
-          );
-          const existing = library.findIndex((b: LibraryEntry) => b.slug === slug);
-          const entry = {
-            slug,
-            title,
-            author,
-            category: episodes.category,
-            tagline: episodes.tagline?.ar || episodes.tagline,
-            coverUrl,
-          };
-          if (existing >= 0) library[existing] = entry;
-          else library.push(entry);
-          localStorage.setItem('bookflix_library', JSON.stringify(library));
-        } catch {}
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Generation failed');
-      } finally {
-        setLoading(false);
+    try {
+      const cached = localStorage.getItem(`bookflix_episodes_${slug}`);
+      if (cached) {
+        setData(JSON.parse(cached));
       }
-    };
+    } catch {}
+  }, [slug]);
 
-    fetchEpisodes();
-  }, [slug, title, author, coverUrl, lang]);
+  const generateEpisodes = useCallback(async () => {
+    if (!slug) return;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, author: author || undefined, lang }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Generation failed');
+      }
+
+      const episodes: BookEpisodes = await res.json();
+      setData(episodes);
+      localStorage.setItem(
+        `bookflix_episodes_${slug}`,
+        JSON.stringify(episodes)
+      );
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Generation failed');
+    } finally {
+      setLoading(false);
+    }
+  }, [slug, title, author, lang]);
+
+  const analyzeMoods = useCallback(async () => {
+    if (!slug || !data) return;
+    setMoodLoading(true);
+    setMoodMessage('');
+    try {
+      const episodeTexts = data.episodes.map(
+        (ep) => ep.content?.en || ep.content?.ar || ''
+      );
+      const res = await fetch('/api/moods/tag', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          author,
+          category: data.category,
+          episodeContents: episodeTexts,
+        }),
+      });
+
+      let scoredMoods: ScoredMood[] = [];
+
+      if (res.ok) {
+        const moodData = await res.json();
+        const validIds = new Set(MOODS.map(m => m.id));
+        const rawMoods: ScoredMood[] = moodData?.moods || [];
+        scoredMoods = rawMoods
+          .filter(m => m && typeof m.mood === 'string' && typeof m.score === 'number' && validIds.has(m.mood))
+          .map(m => ({ mood: m.mood as MoodId, score: Math.round(m.score) }));
+      }
+
+      if (scoredMoods.length === 0) {
+        scoredMoods = classifyBook(slug, title, {
+          title,
+          author,
+          category: data.category,
+        }, data.episodes.map(e => e.content?.en || ''));
+      } else {
+        assignMoods(slug, title, scoredMoods, 'ai');
+      }
+
+      try {
+        const library = JSON.parse(
+          localStorage.getItem('bookflix_library') || '[]'
+        );
+        const existing = library.findIndex((b: LibraryEntry) => b.slug === slug);
+        const entry: LibraryEntry = {
+          slug,
+          title,
+          author,
+          category: data.category,
+          tagline: data.tagline?.ar || `${title} — ${data.category}`,
+          coverUrl,
+          moods: scoredMoods,
+        };
+        if (existing >= 0) library[existing] = entry;
+        else library.push(entry);
+        localStorage.setItem('bookflix_library', JSON.stringify(library));
+      } catch {}
+
+      setMoodMessage('Mood analysis complete!');
+    } catch {
+      setMoodMessage('Mood analysis failed. Try again.');
+    } finally {
+      setMoodLoading(false);
+    }
+  }, [slug, data, title, author, coverUrl]);
 
   const currentProgress = progress[slug] || 0;
   const currentTitle = data?.title?.[lang] || title;
@@ -132,7 +185,7 @@ export default function BookPage() {
         <div className="max-w-2xl mx-auto text-center py-20">
           <p className="text-red-500 text-lg mb-4">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={generateEpisodes}
             className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg"
           >
             Try Again
@@ -142,7 +195,23 @@ export default function BookPage() {
     );
   }
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <main className="min-h-screen pt-24 pb-16 px-4">
+        <div className="max-w-2xl mx-auto text-center py-20">
+          <h1 className="text-3xl font-bold text-white mb-4">{title}</h1>
+          {author && <p className="text-zinc-400 mb-8">by {author}</p>}
+          <p className="text-zinc-500 mb-8">No episodes yet. Generate them with AI.</p>
+          <button
+            onClick={generateEpisodes}
+            className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl text-lg font-semibold"
+          >
+            Generate Episodes
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen pt-24 pb-16 px-4" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -184,6 +253,19 @@ export default function BookPage() {
               </Link>
             );
           })}
+        </div>
+
+        <div className="mt-8 flex flex-col items-center gap-3">
+          {moodMessage && (
+            <p className="text-zinc-400 text-sm">{moodMessage}</p>
+          )}
+          <button
+            onClick={analyzeMoods}
+            disabled={moodLoading}
+            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+          >
+            {moodLoading ? 'Analyzing Moods...' : 'Analyze Moods'}
+          </button>
         </div>
 
         {data.relatedBooks?.[lang] && (
