@@ -53,6 +53,23 @@ function ExploreContent() {
         setBackfilled(true);
       }
 
+      // Fetch AI-generated books from database
+      let dbBooks: LibraryBook[] = [];
+      try {
+        const res = await fetch('/api/books/library?limit=100');
+        if (res.ok) {
+          const data = await res.json();
+          dbBooks = (data.books || []).map((b: { slug: string; title: string; author: string; category: string; tagline: string; coverUrl: string | null }) => ({
+            slug: b.slug,
+            title: b.title,
+            author: b.author || 'AI Generated',
+            category: b.category || '',
+            tagline: b.tagline || '',
+            coverUrl: b.coverUrl || null,
+          }));
+        }
+      } catch {}
+
       try {
         const popular = await fetchPopularBooks();
         const popularBooks: LibraryBook[] = popular.map((b) => ({
@@ -64,13 +81,16 @@ function ExploreContent() {
           coverUrl: b.coverUrl,
         }));
         const savedSlugs = new Set(saved.map((b) => b.slug));
+        const dbSlugs = new Set(dbBooks.map((b) => b.slug));
         const merged = [
-          ...saved,
-          ...popularBooks.filter((b) => !savedSlugs.has(b.slug)),
+          ...dbBooks,
+          ...saved.filter((b) => !dbSlugs.has(b.slug)),
+          ...popularBooks.filter((b) => !dbSlugs.has(b.slug) && !savedSlugs.has(b.slug)),
         ];
         setBooks(merged);
       } catch {
-        setBooks(saved);
+        const allSlugs = new Set(saved.map((b) => b.slug));
+        setBooks([...dbBooks, ...saved.filter((b) => !allSlugs.has(b.slug))]);
       } finally {
         setLoading(false);
       }

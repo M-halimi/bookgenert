@@ -15,7 +15,10 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  books UserBook[]
+  books         UserBook[]
+  library       UserLibrary[]
+  writingDrafts UserWritingDraft[]
+  analytics     AnalyticsEvent[]
 
   @@map("users")
 }
@@ -42,29 +45,214 @@ model Book {
   summary      String?  @db.Text
   tagline      String?
   coverImage   String?  @map("cover_image")
+  coverPrompt  String?  @map("cover_prompt") @db.Text
   category     String?
   language     String   @default("en")
   pageCount    Int?     @map("page_count")
   publishYear  Int?     @map("publish_year")
   source       String   @default("manual")
-  externalId   String?  @map("external_id")
+  externalId   String?  @map("external_id") @db.VarChar(255)
   episodes     Json?
   moodAnalyzed Boolean  @default(false) @map("mood_analyzed")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // New fields for Premium Book Summary Engine
+  finalSummary   String? @map("final_summary") @db.Text
+  mainConcepts   Json?   @map("main_concepts")
+  keyLessons     Json?   @map("key_lessons")
+  keyInsights    Json?   @map("key_insights")
+  implementationGuide String? @map("implementation_guide") @db.Text
+
+  // Generation metadata
+  generationTimeMs Int?     @map("generation_time_ms")
+  aiModelUsed      String?  @map("ai_model_used")
+  aiProvider       String?  @map("ai_provider")
+  cacheHit         Boolean  @default(false) @map("cache_hit")
+  generationStatus String   @default("pending") @map("generation_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   authorId String? @map("author_id") @db.Uuid
   author   Author? @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
-  moods BookMood[]
-  users UserBook[]
+  moods            BookMood[]
+  users            UserBook[]
+  chapters         BookChapter[]
+  bookSummary      BookSummary?
+  writingDrafts    UserWritingDraft[]
+  embedding        BookEmbedding?
+  analytics        AnalyticsEvent[]
 
   @@index([title])
   @@index([category])
   @@index([source])
   @@index([authorId])
   @@index([createdAt])
+  @@index([generationStatus])
   @@map("books")
+}
+
+model BookChapter {
+  id             String @id @default(uuid()) @db.Uuid
+  bookId         String @map("book_id") @db.Uuid
+  chapterNumber  Int    @map("chapter_number")
+  title          Json
+  content        Json
+  hook           Json?
+  keyTakeaway    Json?
+  keyIdeas       Json?  @map("key_ideas")
+  actionableTips Json?  @map("actionable_tips")
+  importantQuotes Json? @map("important_quotes")
+  practicalExamples Json? @map("practical_examples")
+  cliffhanger    Json?
+  wordCount      Int?   @map("word_count")
+  summary        Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, chapterNumber])
+  @@index([bookId])
+  @@index([chapterNumber])
+  @@map("book_chapters")
+}
+
+model BookSummary {
+  id                 String @id @default(uuid()) @db.Uuid
+  bookId             String @unique @map("book_id") @db.Uuid
+  shortSummary       Json?  @map("short_summary")
+  detailedSummary    Json?  @map("detailed_summary")
+  mainConcepts       Json?  @map("main_concepts")
+  keyLessons         Json?  @map("key_lessons")
+  importantInsights  Json?  @map("important_insights")
+  implementationGuide Json? @map("implementation_guide")
+  actionPlan         Json?  @map("action_plan")
+  keyTakeaways       Json?  @map("key_takeaways")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@map("book_summaries")
+}
+
+model BookEmbedding {
+  id            String @id @default(uuid()) @db.Uuid
+  bookId        String @unique @map("book_id") @db.Uuid
+  titleFingerprint String @map("title_fingerprint") @db.Text
+  keywordFingerprint String? @map("keyword_fingerprint") @db.Text
+  searchVector  String? @map("search_vector") @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([titleFingerprint])
+  @@map("book_embeddings")
+}
+
+model BookCache {
+  id            String   @id @default(uuid()) @db.Uuid
+  cacheKey      String   @unique @map("cache_key") @db.VarChar(500)
+  title         String
+  bookId        String?  @map("book_id") @db.Uuid
+  data          Json
+  contentType   String   @map("content_type") @db.VarChar(50)
+  source        String   @default("ai")
+  tokenCount    Int?     @map("token_count")
+  hitCount      Int      @default(0) @map("hit_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+  expiresAt     DateTime @map("expires_at")
+
+  @@index([expiresAt])
+  @@index([cacheKey])
+  @@index([contentType])
+  @@index([title])
+  @@map("book_cache")
+}
+
+model BookGenerationJob {
+  id             String   @id @default(uuid()) @db.Uuid
+  title          String
+  author         String?
+  category       String?
+  status         String   @default("pending")
+  progress       Int      @default(0)
+  totalSteps     Int      @default(10)
+  errorMessage   String?  @map("error_message") @db.Text
+  resultId       String?  @map("result_id") @db.Uuid
+  retryCount     Int      @default(0) @map("retry_count")
+  maxRetries     Int      @default(3) @map("max_retries")
+  aiProvider     String?  @map("ai_provider")
+  aiModel        String?  @map("ai_model")
+  estimatedCompletionAt DateTime? @map("estimated_completion_at")
+  startedAt      DateTime? @map("started_at")
+  completedAt    DateTime? @map("completed_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([title])
+  @@map("book_generation_jobs")
+}
+
+model UserWritingDraft {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  bookId     String?  @map("book_id") @db.Uuid
+  topic      String?
+  title      String
+  category   String?
+  style      String?
+  audience   String?
+  length     String?
+  content    Json?
+  outline    Json?
+  toc        Json?    @map("table_of_contents")
+  status     String   @default("draft")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book? @relation(fields: [bookId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@map("user_writing_drafts")
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  eventType String   @map("event_type") @db.VarChar(100)
+  bookId    String?  @map("book_id") @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  category  String?
+  metadata  Json?
+  value     Float?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  book Book?     @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  user User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([eventType])
+  @@index([bookId])
+  @@index([userId])
+  @@index([category])
+  @@index([createdAt])
+  @@map("analytics_events")
+}
+
+model UserLibrary {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  bookId    String   @map("book_id") @db.Uuid
+  savedAt   DateTime @default(now()) @map("saved_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@index([userId])
+  @@map("user_library")
 }
 
 model Mood {

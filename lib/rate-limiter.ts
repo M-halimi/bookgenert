@@ -32,10 +32,3 @@ export class RateLimiter {
     this.store.clear();
   }
 }
-
-let instance: RateLimiter | null = null;
-
-export function getRateLimiter(maxRequests = 5, windowMs = 60000): RateLimiter {
-  if (!instance) instance = new RateLimiter(maxRequests, windowMs);
-  return instance;
-}

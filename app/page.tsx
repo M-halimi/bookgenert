@@ -23,25 +23,46 @@ export default function Home() {
   const [backfilled, setBackfilled] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('bookflix_library');
-      let books: LibraryBook[] = [];
-      if (raw) {
-        books = JSON.parse(raw).map((b: LibraryBook) => ({ ...b, moods: normalizeMoods(b.moods) }));
-        setLibrary(books);
-      }
+    async function load() {
+      try {
+        const raw = localStorage.getItem('bookflix_library');
+        let books: LibraryBook[] = [];
+        if (raw) {
+          books = JSON.parse(raw).map((b: LibraryBook) => ({ ...b, moods: normalizeMoods(b.moods) }));
+          setLibrary(books);
+        }
 
-      if (!backfilled && isBackfillNeeded()) {
-        const counts = backfillFromLibrary(
-          books.map(b => ({ slug: b.slug, title: b.title, author: b.author, category: b.category }))
-        );
-        setMoodCounts(counts as unknown as Record<string, number>);
-        setBackfilled(true);
-      } else {
-        setMoodCounts(getMoodCounts() as unknown as Record<string, number>);
-        setBackfilled(true);
-      }
-    } catch {}
+        // Fetch AI-generated books from database
+        try {
+          const res = await fetch('/api/books/library?limit=50');
+          if (res.ok) {
+            const data = await res.json();
+            const dbBooks: LibraryBook[] = (data.books || []).map((b: { slug: string; title: string; author: string; category: string; tagline: string; coverUrl: string | null }) => ({
+              slug: b.slug,
+              title: b.title,
+              author: b.author || 'AI Generated',
+              category: b.category || '',
+              tagline: b.tagline || '',
+              coverUrl: b.coverUrl || null,
+            }));
+            const dbSlugs = new Set(dbBooks.map((b) => b.slug));
+            setLibrary([...dbBooks, ...books.filter((b) => !dbSlugs.has(b.slug))]);
+          }
+        } catch {}
+
+        if (!backfilled && isBackfillNeeded()) {
+          const counts = backfillFromLibrary(
+            books.map(b => ({ slug: b.slug, title: b.title, author: b.author, category: b.category }))
+          );
+          setMoodCounts(counts as unknown as Record<string, number>);
+          setBackfilled(true);
+        } else {
+          setMoodCounts(getMoodCounts() as unknown as Record<string, number>);
+          setBackfilled(true);
+        }
+      } catch {}
+    }
+    load();
   }, [backfilled]);
 
   const bookCount = (moodId: MoodId): number => {

@@ -5,6 +5,8 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import ReaderEngine from '@/components/reader/ReaderEngine';
 import type { BookEpisodes, LangCode } from '@/lib/groq';
 
+const TOTAL_EPISODES = 10;
+
 export default function ReadPage() {
   const params = useParams();
   const router = useRouter();
@@ -41,7 +43,7 @@ export default function ReadPage() {
     );
   }
 
-  if (!data || episodeNumber < 1 || episodeNumber > 6) {
+  if (!data || episodeNumber < 1 || episodeNumber > TOTAL_EPISODES) {
     return (
       <main className="min-h-screen pt-24 pb-16 px-4 bg-zinc-950">
         <div className="max-w-2xl mx-auto text-center py-20">
@@ -65,7 +67,7 @@ export default function ReadPage() {
         <ReaderEngine
           episode={episode}
           slug={slug}
-          totalEpisodes={6}
+          totalEpisodes={TOTAL_EPISODES}
           lang={lang}
         />
       </div>

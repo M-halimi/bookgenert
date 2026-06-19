@@ -14,6 +14,12 @@ export default function Navbar() {
           <Link href="/explore" className="text-zinc-300 hover:text-white transition-colors">
             Explore
           </Link>
+          <Link href="/write" className="text-zinc-300 hover:text-white transition-colors">
+            Write
+          </Link>
+          <Link href="/analytics" className="text-zinc-300 hover:text-white transition-colors">
+            Analytics
+          </Link>
         </div>
       </div>
     </nav>

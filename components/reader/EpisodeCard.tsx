@@ -2,10 +2,12 @@ export default function EpisodeCard({
   number,
   title,
   status,
+  subtitle,
 }: {
   number: number;
   title: string;
   status: 'locked' | 'current' | 'done';
+  subtitle?: string;
 }) {
   const statusStyles = {
     locked: 'border-zinc-800 opacity-50',
@@ -69,7 +71,7 @@ export default function EpisodeCard({
         {number}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-zinc-500">Episode {number}</p>
+        <p className="text-sm text-zinc-500">Chapter {number}</p>
         <p
           className={`font-medium truncate ${
             status === 'locked' ? 'text-zinc-600' : 'text-white'
@@ -77,6 +79,9 @@ export default function EpisodeCard({
         >
           {title}
         </p>
+        {subtitle && (
+          <p className="text-xs text-zinc-500 truncate mt-0.5">{subtitle}</p>
+        )}
       </div>
       <div className="flex-shrink-0">{statusIcons[status]}</div>
     </div>

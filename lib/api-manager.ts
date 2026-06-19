@@ -1,6 +1,6 @@
-import { getRateLimiter } from './rate-limiter';
+import { RateLimiter } from './rate-limiter';
 
-type ApiFormat = 'openai' | 'cloudflare';
+type ApiFormat = 'openai' | 'cloudflare' | 'gemini';
 
 interface ProviderConfig {
   name: string;
@@ -77,12 +77,14 @@ class ApiManager {
   private health: Map<string, ProviderHealth>;
   private logs: ApiLogEntry[];
   private loadBalanceMode: boolean;
+  private rateLimiter: RateLimiter;
 
   constructor(loadBalanceMode = false) {
     this.providers = this.discoverProviders();
     this.health = new Map();
     this.logs = [];
     this.loadBalanceMode = loadBalanceMode;
+    this.rateLimiter = new RateLimiter(10, 60000);
 
     for (const p of this.providers) {
       this.health.set(p.name, {
@@ -168,6 +170,19 @@ class ApiManager {
       });
     }
 
+    if (process.env.GEMINI_API_KEY) {
+      configs.push({
+        name: 'gemini',
+        key: process.env.GEMINI_API_KEY,
+        baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models',
+        models: ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'],
+        priority: 5,
+        format: 'gemini',
+        cooldownPeriodMs: 60000,
+        maxRetries: 2,
+      });
+    }
+
     configs.sort((a, b) => a.priority - b.priority);
     return configs;
   }
@@ -230,6 +245,9 @@ class ApiManager {
   ): Promise<ApiCompletionResponse> {
     const start = Date.now();
 
+    if (provider.format === 'gemini') {
+      return this.executeGemini(provider, request, start, signal);
+    }
     if (provider.format === 'cloudflare') {
       return this.executeCloudflare(provider, request, start, signal);
     }
@@ -327,6 +345,58 @@ class ApiManager {
     return { content, provider: provider.name, model, latencyMs: Date.now() - start };
   }
 
+  private async executeGemini(
+    provider: ProviderConfig,
+    request: ApiCompletionRequest,
+    start: number,
+    signal?: AbortSignal
+  ): Promise<ApiCompletionResponse> {
+    const model = request.model || provider.models[0] || 'gemini-2.0-flash';
+    const url = `${provider.baseUrl}/${model}:generateContent?key=${provider.key}`;
+
+    const combinedContent = request.messages
+      .map((m) => (m.role === 'system' ? `[System Instruction]\n${m.content}\n[/System Instruction]` : m.content))
+      .join('\n\n');
+
+    const body = {
+      contents: [
+        {
+          parts: [{ text: combinedContent }],
+        },
+      ],
+      generationConfig: {
+        maxOutputTokens: request.maxTokens ?? 4096,
+        temperature: request.temperature ?? 0.7,
+      },
+    };
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: signal ?? AbortSignal.timeout(90000),
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => 'unknown');
+      const isRetryable = res.status === 429 || res.status >= 500;
+      throw new ApiError(
+        `[${provider.name}] ${res.status}: ${errBody.slice(0, 200)}`,
+        res.status,
+        isRetryable
+      );
+    }
+
+    const data: { candidates?: { content?: { parts?: { text?: string }[] } }[] } = await res.json();
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!content) {
+      throw new ApiError(`[${provider.name}] Empty response`, 0, true);
+    }
+
+    return { content, provider: provider.name, model, latencyMs: Date.now() - start };
+  }
+
   private inFlight = new Map<string, Promise<ApiCompletionResponse>>();
 
   private dedupKey(request: ApiCompletionRequest): string {
@@ -346,8 +416,7 @@ class ApiManager {
     }
 
     if (!whitelisted) {
-      const limiter = getRateLimiter(10, 60000);
-      const rateCheck = limiter.check('api-manager');
+      const rateCheck = this.rateLimiter.check('api-manager');
       if (!rateCheck.allowed) {
         throw new ApiError(
           `Rate limited by global AI throttle. Try again in ${Math.ceil((rateCheck.resetAt - Date.now()) / 1000)}s.`,
@@ -376,6 +445,7 @@ class ApiManager {
   ): Promise<ApiCompletionResponse> {
     const fallbackChain: string[] = [];
     let lastError: string | null = null;
+    let lastStatus: number | null = null;
     let retries = 0;
 
     const availableProviders = this.loadBalanceMode
@@ -406,8 +476,15 @@ class ApiManager {
         } catch (err) {
           retries++;
           const apiErr = err instanceof ApiError ? err : new ApiError(String(err), 0, true);
+          lastError = apiErr.message;
+          lastStatus = apiErr.status;
 
           if (apiErr.status === 429) {
+            // Quota errors won't resolve with retries — skip to next provider
+            if (apiErr.message.toLowerCase().includes('quota')) {
+              this.recordFailure(provider.name, false);
+              break;
+            }
             const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
             await new Promise((r) => setTimeout(r, delay));
             continue;
@@ -419,7 +496,6 @@ class ApiManager {
             continue;
           }
 
-          lastError = apiErr.message;
           this.recordFailure(provider.name, apiErr.retryable);
           break;
         }
@@ -437,8 +513,14 @@ class ApiManager {
       retries,
     });
 
+    const errorMsg = lastError
+      ? lastError
+      : lastStatus === 429
+        ? 'Rate limited by all AI providers — too many requests. Wait and try again.'
+        : 'All AI providers are currently unavailable. Check your API keys and network connection.';
+
     throw new ApiError(
-      `All AI providers failed after ${retries} retries across [${fallbackChain.join(' -> ')}]: ${lastError || 'unknown error'}`,
+      `All AI providers failed after ${retries} retries across [${fallbackChain.join(' -> ')}]: ${errorMsg}`,
       503,
       false
     );
@@ -506,6 +588,22 @@ class ApiManager {
   getTotalProviders(): number {
     return this.providers.length;
   }
+
+  resetHealth(): void {
+    for (const p of this.providers) {
+      this.health.set(p.name, {
+        status: 'active',
+        failureCount: 0,
+        successCount: 0,
+        totalLatencyMs: 0,
+        lastFailureAt: null,
+        cooldownUntil: null,
+        lastUsedAt: null,
+        consecutiveFailures: 0,
+        avgLatencyMs: 0,
+      });
+    }
+  }
 }
 
 let instance: ApiManager | null = null;
@@ -515,6 +613,10 @@ export function getApiManager(loadBalanceMode = false): ApiManager {
     instance = new ApiManager(loadBalanceMode);
   }
   return instance;
+}
+
+export function resetApiManager(): void {
+  instance = null;
 }
 
 export type {

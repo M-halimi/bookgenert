@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import LangSwitcher from '@/components/ui/LangSwitcher';
-import type { Episode, LangCode } from '@/lib/groq';
+import type { RichChapter, LangCode } from '@/lib/groq';
 
 interface ReaderEngineProps {
-  episode: Episode;
+  episode: RichChapter;
   slug: string;
   totalEpisodes: number;
   lang: LangCode;
@@ -24,13 +24,19 @@ export default function ReaderEngine({
   const router = useRouter();
   const indexRef = useRef(0);
 
-  const currentHook = episode.hook[displayLang];
+  const currentHook = episode.hook?.[displayLang] || '';
   const currentContent = episode.content[displayLang];
   const currentTitle = episode.title[displayLang];
   const currentTakeaway = episode.keyTakeaway[displayLang];
   const currentCliffhanger = episode.cliffhanger[displayLang];
+  const currentKeyIdeas = episode.keyIdeas?.[displayLang] || '';
+  const currentTips = episode.actionableTips?.[displayLang] || '';
+  const currentQuotes = episode.importantQuotes?.[displayLang] || '';
+  const currentExamples = episode.practicalExamples?.[displayLang] || '';
 
-  const fullText = currentHook ? `${currentHook}\n\n${currentContent}` : currentContent;
+  const fullText = currentHook
+    ? `${currentHook}\n\n${currentContent}`
+    : currentContent;
 
   useEffect(() => {
     indexRef.current = 0;
@@ -85,6 +91,50 @@ export default function ReaderEngine({
 
       {isComplete && (
         <div className="space-y-6">
+          {currentKeyIdeas && (
+            <div className="bg-purple-600/10 border border-purple-600/30 rounded-lg p-4">
+              <h3 className="text-purple-400 font-semibold mb-2">
+                {displayLang === 'ar' ? 'الأفكار الرئيسية' :
+                 displayLang === 'fr' ? 'Idées clés' :
+                 'Key Ideas'}
+              </h3>
+              <p className="text-zinc-300 whitespace-pre-line">{currentKeyIdeas}</p>
+            </div>
+          )}
+
+          {currentTips && (
+            <div className="bg-green-600/10 border border-green-600/30 rounded-lg p-4">
+              <h3 className="text-green-400 font-semibold mb-2">
+                {displayLang === 'ar' ? 'نصائح قابلة للتطبيق' :
+                 displayLang === 'fr' ? 'Conseils actionnables' :
+                 'Actionable Tips'}
+              </h3>
+              <p className="text-zinc-300 whitespace-pre-line">{currentTips}</p>
+            </div>
+          )}
+
+          {currentExamples && (
+            <div className="bg-yellow-600/10 border border-yellow-600/30 rounded-lg p-4">
+              <h3 className="text-yellow-400 font-semibold mb-2">
+                {displayLang === 'ar' ? 'أمثلة عملية' :
+                 displayLang === 'fr' ? 'Exemples pratiques' :
+                 'Practical Examples'}
+              </h3>
+              <p className="text-zinc-300 whitespace-pre-line">{currentExamples}</p>
+            </div>
+          )}
+
+          {currentQuotes && (
+            <div className="bg-blue-600/10 border border-blue-600/30 rounded-lg p-4 italic">
+              <h3 className="text-blue-400 font-semibold mb-2 not-italic">
+                {displayLang === 'ar' ? 'اقتباسات مهمة' :
+                 displayLang === 'fr' ? 'Citations importantes' :
+                 'Important Quotes'}
+              </h3>
+              <p className="text-zinc-300">{currentQuotes}</p>
+            </div>
+          )}
+
           {currentTakeaway && (
             <div className="bg-red-600/10 border border-red-600/30 rounded-lg p-4">
               <h3 className="text-red-500 font-semibold mb-1">
