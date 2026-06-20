@@ -44,6 +44,65 @@ lib/
 npm run dev       # Development server
 npm run build     # Production build
 npm run start     # Start production server
+
+# Database
+npx prisma generate           # Regenerate Prisma client
+npx prisma db push            # Push schema to DB (dev)
+npx prisma migrate deploy     # Apply migrations (prod)
+npx prisma studio             # Open DB browser
+```
+
+## Supabase + Vercel Deployment
+
+### Database connection (two URLs)
+Prisma needs **two** connection strings with Supabase because PgBouncer can't handle migrations:
+
+| Variable | Port | Purpose | Example |
+|---|---|---|---|
+| `DATABASE_URL` | **6543** | Runtime queries (pooled via PgBouncer) | `postgresql://postgres:pass@db.xxx.supabase.co:6543/postgres?pgbouncer=true&connection_limit=5` |
+| `DIRECT_URL` | **5432** | Prisma Migrate (direct, bypasses PgBouncer) | `postgresql://postgres:pass@db.xxx.supabase.co:5432/postgres` |
+
+### File responsibilities
+
+| File | Committed? | Used in | Contains |
+|---|---|---|---|
+| `.env` | Yes | Build only (placeholder) | `postgresql://placeholder:placeholder@localhost:5432/placeholder` — enough for `prisma generate` |
+| `.env.local` | **No** (gitignored) | Local dev only | Real localhost `DATABASE_URL` + all API keys |
+| Vercel env vars | N/A | Production + Preview | Real Supabase `DATABASE_URL` + `DIRECT_URL` + all API keys |
+
+### First-time Supabase setup
+```bash
+# 1. Set your Supabase URLs temporarily
+$env:DATABASE_URL="postgresql://postgres:PASS@db.REF.supabase.co:6543/postgres?pgbouncer=true&connection_limit=5"
+$env:DIRECT_URL="postgresql://postgres:PASS@db.REF.supabase.co:5432/postgres"
+
+# 2. Push schema to Supabase (creates all tables)
+npx prisma db push
+
+# Or use migrations:
+npx prisma migrate deploy
+```
+
+### Vercel environment variables
+In Vercel Dashboard → Project → Settings → Environment Variables, add:
+
+| Key | Value | Scope | Build Time |
+|---|---|---|---|
+| `DATABASE_URL` | Supabase pooled (port 6543) | Production, Preview | ✅ |
+| `DIRECT_URL` | Supabase direct (port 5432) | Production, Preview | ❌ (runtime only) |
+| `GROQ_API_KEY` | `gsk_...` | Production, Preview | ✅ |
+| `CLOUDFLARE_API_TOKEN` | `cfut_...` | Production, Preview | ✅ |
+| `CLOUDFLARE_ACCOUNT_ID` | `...` | Production, Preview | ✅ |
+| `OPENROUTER_API_KEY` | `sk-or-...` | Production, Preview | ✅ |
+| `API_SECRET_KEY` | (generated value) | Production, Preview | ✅ |
+
+> `DIRECT_URL` only needs to be available at runtime for Prisma Migrate commands run via Vercel CLI. It's not needed during `next build`.
+
+### How it works at runtime
+```
+local dev:  .env.local overrides .env → DATABASE_URL = localhost:5432 (no DIRECT_URL needed)
+Vercel build:  .env placeholder → enough for prisma generate
+Vercel runtime:  Vercel env vars override → DATABASE_URL = Supabase pooled, DIRECT_URL = Supabase direct
 ```
 
 ## Gemini Prompt Template
