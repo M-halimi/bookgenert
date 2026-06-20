@@ -119,12 +119,16 @@ export default function BookPage() {
         body: JSON.stringify({ title, author: author || undefined, lang }),
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Generation failed');
+      const episodes: BookEpisodes & { _cached?: boolean; _cacheSimilarity?: number; _error?: string } = await res.json();
+
+      if (episodes._error) {
+        throw new Error(episodes._error);
       }
 
-      const episodes: BookEpisodes & { _cached?: boolean; _cacheSimilarity?: number } = await res.json();
+      if (!res.ok) {
+        throw new Error('Generation failed');
+      }
+
       setData(episodes);
 
       if (episodes._cached) {

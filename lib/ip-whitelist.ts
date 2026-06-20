@@ -2,6 +2,11 @@ import { NextRequest } from 'next/server';
 
 const DEFAULT_WHITELIST: string[] = [
   '105.75.8.106',
+  '::1',
+  '::ffff:127.0.0.1',
+  '127.0.0.1',
+  'localhost',
+  'unknown',
 ];
 
 function getWhitelist(): string[] {

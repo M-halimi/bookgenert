@@ -1,6 +1,6 @@
 import { RateLimiter } from './rate-limiter';
 
-type ApiFormat = 'openai' | 'cloudflare' | 'gemini';
+type ApiFormat = 'openai' | 'cloudflare' | 'gemini' | 'ollama';
 
 interface ProviderConfig {
   name: string;
@@ -108,6 +108,19 @@ class ApiManager {
   private discoverProviders(): ProviderConfig[] {
     const configs: ProviderConfig[] = [];
 
+    if (process.env.OLLAMA_URL || process.env.OLLAMA_MODEL) {
+      configs.push({
+        name: 'ollama',
+        key: '',
+        baseUrl: (process.env.OLLAMA_URL || 'http://localhost:11434').replace(/\/+$/, ''),
+        models: [process.env.OLLAMA_MODEL || 'llama3'],
+        priority: 0,
+        format: 'ollama',
+        cooldownPeriodMs: 30000,
+        maxRetries: 2,
+      });
+    }
+
     if (process.env.GROQ_API_KEY) {
       configs.push({
         name: 'groq',
@@ -203,15 +216,20 @@ class ApiManager {
 
   private isHealthy(name: string): boolean {
     const h = this.getProviderHealth(name);
-    if (h.status === 'cooldown' && h.cooldownUntil) {
-      if (Date.now() >= h.cooldownUntil) {
+
+    if (h.status === 'active') return true;
+
+    if ((h.status === 'cooldown' || h.status === 'failed') && h.lastFailureAt) {
+      if (Date.now() - h.lastFailureAt >= 120000) {
         h.status = 'active';
         h.consecutiveFailures = 0;
+        h.cooldownUntil = null;
         return true;
       }
       return false;
     }
-    return h.status === 'active';
+
+    return false;
   }
 
   private recordSuccess(name: string, latencyMs: number): void {
@@ -245,6 +263,9 @@ class ApiManager {
   ): Promise<ApiCompletionResponse> {
     const start = Date.now();
 
+    if (provider.format === 'ollama') {
+      return this.executeOllama(provider, request, start, signal);
+    }
     if (provider.format === 'gemini') {
       return this.executeGemini(provider, request, start, signal);
     }
@@ -389,6 +410,63 @@ class ApiManager {
 
     const data: { candidates?: { content?: { parts?: { text?: string }[] } }[] } = await res.json();
     const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!content) {
+      throw new ApiError(`[${provider.name}] Empty response`, 0, true);
+    }
+
+    return { content, provider: provider.name, model, latencyMs: Date.now() - start };
+  }
+
+  private async executeOllama(
+    provider: ProviderConfig,
+    request: ApiCompletionRequest,
+    start: number,
+    signal?: AbortSignal
+  ): Promise<ApiCompletionResponse> {
+    const model = request.model || provider.models[0] || 'llama3';
+    const timeout = 180000;
+
+    const combinedPrompt = request.messages
+      .map((m) =>
+        m.role === 'system'
+          ? `[System Instruction]\n${m.content}\n[/System Instruction]`
+          : m.content
+      )
+      .join('\n\n');
+
+    const res = await fetch(`${provider.baseUrl}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        prompt: combinedPrompt,
+        stream: false,
+        options: {
+          temperature: request.temperature ?? 0.7,
+          num_predict: request.maxTokens ?? 4096,
+        },
+      }),
+      signal: signal ?? AbortSignal.timeout(timeout),
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => 'unknown');
+      const isRetryable = res.status === 429 || res.status >= 500;
+      throw new ApiError(
+        `[${provider.name}] ${res.status}: ${errBody.slice(0, 200)}`,
+        res.status,
+        isRetryable
+      );
+    }
+
+    const data: { response?: string; error?: string } = await res.json();
+
+    if (data.error) {
+      throw new ApiError(`[${provider.name}] ${data.error}`, 0, true);
+    }
+
+    const content = data.response;
 
     if (!content) {
       throw new ApiError(`[${provider.name}] Empty response`, 0, true);

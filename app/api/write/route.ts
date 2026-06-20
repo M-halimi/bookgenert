@@ -40,8 +40,7 @@ export async function POST(request: NextRequest) {
 
     try {
       const { book, provider, model } = await generateWrittenBook(
-        { topic, title, category, style, audience, length },
-        whitelisted
+        { topic, title, category, style, audience, length }
       );
 
       const generationTime = Date.now() - startTime;
