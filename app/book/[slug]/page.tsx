@@ -95,11 +95,22 @@ export default function BookPage() {
     setLoading(true);
     setError('');
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000);
+
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, author: author || undefined, lang }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
+
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        const text = await res.text().catch(() => '');
+        throw new Error(text ? `Server error: ${text.slice(0, 200)}` : 'Generation timed out. Try again.');
+      }
 
       const result: BookEpisodes & { _error?: string } = await res.json();
 
@@ -113,7 +124,11 @@ export default function BookPage() {
 
       setData(result);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Generation failed');
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        setError('Generation timed out. Try again.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Generation failed');
+      }
     } finally {
       setLoading(false);
     }

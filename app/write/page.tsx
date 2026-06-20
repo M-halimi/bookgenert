@@ -84,6 +84,9 @@ export default function WritePage() {
         });
       }, 3000);
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000);
+
       const res = await fetch('/api/write', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -95,9 +98,17 @@ export default function WritePage() {
           audience,
           length,
         }),
+        signal: controller.signal,
       });
 
       clearInterval(progressInterval);
+      clearTimeout(timeoutId);
+
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        const text = await res.text().catch(() => '');
+        throw new Error(text ? `Server error: ${text.slice(0, 200)}` : 'Generation timed out. Try again.');
+      }
 
       if (!res.ok) {
         const err = await res.json();

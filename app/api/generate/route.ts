@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateLocalizedEpisodes } from '@/lib/groq';
+
+export const maxDuration = 300;
 import { getCache } from '@/lib/ai/cache';
 import { getRouterState } from '@/lib/ai/router-state';
 import { RateLimiter } from '@/lib/rate-limiter';

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateWrittenBook } from '@/lib/groq';
+
+export const maxDuration = 300;
 import { RateLimiter } from '@/lib/rate-limiter';
 import { getClientIP, isWhitelisted } from '@/lib/ip-whitelist';
 import { saveGeneratedBook, createGenerationJob, updateGenerationJob, trackAnalytics } from '@/lib/cache-manager';
