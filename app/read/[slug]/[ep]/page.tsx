@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import ReaderEngine from '@/components/reader/ReaderEngine';
-import type { BookEpisodes, LangCode } from '@/lib/groq';
+import type { BookEpisodes, LangCode, MultilingualText } from '@/lib/groq';
 
 const TOTAL_EPISODES = 10;
 
@@ -15,20 +15,77 @@ export default function ReadPage() {
   const epParam = params.ep as string;
   const episodeNumber = parseInt(epParam, 10);
   const langParam = (searchParams.get('lang') || 'ar') as LangCode;
-  const lang: LangCode = ['ar', 'fr', 'en'].includes(langParam) ? langParam : 'ar';
+  const lang: LangCode = ['ar', 'fr', 'en', 'de'].includes(langParam) ? langParam : 'ar';
 
   const [data, setData] = useState<BookEpisodes | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!slug) return;
-    try {
-      const cached = localStorage.getItem(`bookflix_episodes_${slug}`);
-      if (cached) {
-        setData(JSON.parse(cached));
-      }
-    } catch {}
-    setLoading(false);
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const cached = localStorage.getItem(`bookflix_episodes_${slug}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed?.episodes?.length > 0) {
+            if (!cancelled) setData(parsed);
+            if (!cancelled) setLoading(false);
+            return;
+          }
+        }
+      } catch {}
+
+      try {
+        const res = await fetch(`/api/books/content?slug=${slug}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (!cancelled) {
+            const bookData: BookEpisodes = {
+              title: json.episodes?.title || { ar: json.title, fr: json.title, en: json.title },
+              author: json.author || 'AI Generated',
+              category: json.category || 'General',
+              tagline: json.episodes?.tagline || { ar: '', fr: '', en: '' },
+              description: json.description || '',
+              coverPrompt: json.coverPrompt || '',
+              relatedBooks: json.episodes?.relatedBooks || { ar: '', fr: '', en: '' },
+              deepExplanation: json.episodes?.deepExplanation || { ar: '', fr: '', en: '' },
+              finalSummary: json.episodes?.finalSummary ||
+                (json.finalSummary ? { ar: json.finalSummary, fr: json.finalSummary, en: json.finalSummary } : { ar: '', fr: '', en: '' }),
+              mainConcepts: json.episodes?.mainConcepts ||
+                (json.mainConcepts ? { ar: '', fr: '', en: '' } : { ar: '', fr: '', en: '' }),
+              keyLessons: json.episodes?.keyLessons || json.keyLessons || [],
+              keyInsights: json.episodes?.keyInsights || json.keyInsights || [],
+              implementationGuide: json.episodes?.implementationGuide ||
+                (json.implementationGuide ? { ar: json.implementationGuide, fr: json.implementationGuide, en: json.implementationGuide } : { ar: '', fr: '', en: '' }),
+              episodes: json.chapters?.length > 0
+                ? json.chapters.map((ch: { number?: number; title?: MultilingualText; hook?: MultilingualText; content?: MultilingualText; keyIdeas?: MultilingualText; actionableTips?: MultilingualText; importantQuotes?: MultilingualText; practicalExamples?: MultilingualText; keyTakeaway?: MultilingualText; cliffhanger?: MultilingualText; summary?: MultilingualText; wordCount?: number }) => ({
+                    number: ch.number || 0,
+                    title: ch.title || { ar: '', fr: '', en: '' },
+                    hook: ch.hook || { ar: '', fr: '', en: '' },
+                    content: ch.content || { ar: '', fr: '', en: '' },
+                    keyIdeas: ch.keyIdeas || { ar: '', fr: '', en: '' },
+                    actionableTips: ch.actionableTips || { ar: '', fr: '', en: '' },
+                    importantQuotes: ch.importantQuotes || { ar: '', fr: '', en: '' },
+                    practicalExamples: ch.practicalExamples || { ar: '', fr: '', en: '' },
+                    keyTakeaway: ch.keyTakeaway || { ar: '', fr: '', en: '' },
+                    cliffhanger: ch.cliffhanger || { ar: '', fr: '', en: '' },
+                    summary: ch.summary || { ar: '', fr: '', en: '' },
+                    wordCount: ch.wordCount || 300,
+                  }))
+                : json.episodes?.episodes || [],
+            };
+            setData(bookData);
+          }
+        }
+      } catch {}
+
+      if (!cancelled) setLoading(false);
+    }
+
+    load();
+    return () => { cancelled = true; };
   }, [slug]);
 
   if (loading) {

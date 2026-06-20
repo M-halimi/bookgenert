@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import SearchBar from '@/components/ui/SearchBar';
 import BookCard from '@/components/library/BookCard';
-import { MOODS, normalizeMoods, MOOD_SCORE_THRESHOLD, type MoodId, type ScoredMood } from '@/lib/moods';
+import { MOODS, MOOD_SCORE_THRESHOLD, type MoodId, type ScoredMood } from '@/lib/moods';
 import { getBooksByMood, getMoodCounts, backfillFromLibrary, isBackfillNeeded } from '@/lib/mood-store';
 
 interface LibraryBook {
@@ -25,38 +25,29 @@ export default function Home() {
   useEffect(() => {
     async function load() {
       try {
-        const raw = localStorage.getItem('bookflix_library');
-        let books: LibraryBook[] = [];
-        if (raw) {
-          books = JSON.parse(raw).map((b: LibraryBook) => ({ ...b, moods: normalizeMoods(b.moods) }));
-          setLibrary(books);
-        }
+        const res = await fetch('/api/books/library?limit=50');
+        if (res.ok) {
+          const data = await res.json();
+          const dbBooks: LibraryBook[] = (data.books || []).map((b: { slug: string; title: string; author: string; category: string; tagline: string; coverUrl: string | null }) => ({
+            slug: b.slug,
+            title: b.title,
+            author: b.author || 'AI Generated',
+            category: b.category || '',
+            tagline: b.tagline || '',
+            coverUrl: b.coverUrl || null,
+          }));
+          setLibrary(dbBooks);
 
-        // Fetch AI-generated books from database
-        try {
-          const res = await fetch('/api/books/library?limit=50');
-          if (res.ok) {
-            const data = await res.json();
-            const dbBooks: LibraryBook[] = (data.books || []).map((b: { slug: string; title: string; author: string; category: string; tagline: string; coverUrl: string | null }) => ({
-              slug: b.slug,
-              title: b.title,
-              author: b.author || 'AI Generated',
-              category: b.category || '',
-              tagline: b.tagline || '',
-              coverUrl: b.coverUrl || null,
-            }));
-            const dbSlugs = new Set(dbBooks.map((b) => b.slug));
-            setLibrary([...dbBooks, ...books.filter((b) => !dbSlugs.has(b.slug))]);
+          if (!backfilled && isBackfillNeeded()) {
+            const counts = backfillFromLibrary(
+              dbBooks.map(b => ({ slug: b.slug, title: b.title, author: b.author, category: b.category }))
+            );
+            setMoodCounts(counts as unknown as Record<string, number>);
+            setBackfilled(true);
+            return;
           }
-        } catch {}
-
-        if (!backfilled && isBackfillNeeded()) {
-          const counts = backfillFromLibrary(
-            books.map(b => ({ slug: b.slug, title: b.title, author: b.author, category: b.category }))
-          );
-          setMoodCounts(counts as unknown as Record<string, number>);
-          setBackfilled(true);
-        } else {
+        }
+        if (!backfilled) {
           setMoodCounts(getMoodCounts() as unknown as Record<string, number>);
           setBackfilled(true);
         }

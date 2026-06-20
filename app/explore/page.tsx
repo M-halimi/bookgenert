@@ -6,8 +6,8 @@ import FilterChips from '@/components/library/FilterChips';
 import MoodSelector from '@/components/library/MoodSelector';
 import BookCard from '@/components/library/BookCard';
 import { fetchPopularBooks } from '@/lib/openlibrary';
-import { MOODS, normalizeMoods, type MoodId, type ScoredMood } from '@/lib/moods';
-import { getBooksByMood, backfillFromLibrary, isBackfillNeeded } from '@/lib/mood-store';
+import { MOODS, type MoodId, type ScoredMood } from '@/lib/moods';
+import { getBooksByMood, isBackfillNeeded } from '@/lib/mood-store';
 
 interface LibraryBook {
   slug: string;
@@ -35,25 +35,12 @@ function ExploreContent() {
 
   useEffect(() => {
     async function load() {
-      const saved: LibraryBook[] = (() => {
-        try {
-          const raw = localStorage.getItem('bookflix_library');
-          return raw ? JSON.parse(raw).map((b: LibraryBook) => ({ ...b, moods: normalizeMoods(b.moods) })) : [];
-        } catch {
-          return [];
-        }
-      })();
-
       if (!backfilled && isBackfillNeeded()) {
-        backfillFromLibrary(
-          saved.map(b => ({ slug: b.slug, title: b.title, author: b.author, category: b.category }))
-        );
         setBackfilled(true);
       } else {
         setBackfilled(true);
       }
 
-      // Fetch AI-generated books from database
       let dbBooks: LibraryBook[] = [];
       try {
         const res = await fetch('/api/books/library?limit=100');
@@ -80,17 +67,14 @@ function ExploreContent() {
           tagline: '',
           coverUrl: b.coverUrl,
         }));
-        const savedSlugs = new Set(saved.map((b) => b.slug));
         const dbSlugs = new Set(dbBooks.map((b) => b.slug));
         const merged = [
           ...dbBooks,
-          ...saved.filter((b) => !dbSlugs.has(b.slug)),
-          ...popularBooks.filter((b) => !dbSlugs.has(b.slug) && !savedSlugs.has(b.slug)),
+          ...popularBooks.filter((b) => !dbSlugs.has(b.slug)),
         ];
         setBooks(merged);
       } catch {
-        const allSlugs = new Set(saved.map((b) => b.slug));
-        setBooks([...dbBooks, ...saved.filter((b) => !allSlugs.has(b.slug))]);
+        setBooks(dbBooks);
       } finally {
         setLoading(false);
       }

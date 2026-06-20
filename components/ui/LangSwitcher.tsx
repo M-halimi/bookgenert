@@ -4,6 +4,7 @@ const LANG_LABELS: Record<LangCode, string> = {
   ar: 'العربية',
   fr: 'Français',
   en: 'English',
+  de: 'Deutsch',
 };
 
 export default function LangSwitcher({
@@ -13,7 +14,7 @@ export default function LangSwitcher({
   value: LangCode;
   onChange: (lang: LangCode) => void;
 }) {
-  const langs: LangCode[] = ['ar', 'fr', 'en'];
+  const langs: LangCode[] = ['ar', 'fr', 'en', 'de'];
 
   return (
     <div className="flex gap-1 bg-zinc-800 rounded-lg p-1 w-fit">

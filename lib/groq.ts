@@ -8,12 +8,13 @@ import {
   type GenerationAttempt,
 } from './validation';
 
-export type LangCode = 'ar' | 'fr' | 'en';
+export type LangCode = 'ar' | 'fr' | 'en' | 'de';
 
 export interface MultilingualText {
   ar: string;
   fr: string;
   en: string;
+  de: string;
 }
 
 export interface RichChapter {
@@ -55,10 +56,11 @@ export interface GenerationResult {
   latencyMs: number;
 }
 
-const LANG_INSTRUCTIONS = `Always include ALL text fields in ALL three languages:
+const LANG_INSTRUCTIONS = `Always include ALL text fields in ALL four languages:
 - "ar": Arabic (Modern Standard Arabic - فصحى واضحة)
-- "fr": French (professional, naturel)
+- "fr": French (professionnel, naturel)
 - "en": English (clear, native-level)
+- "de": German (klar, professionell)
 
 CRITICAL RULES:
 - DO NOT translate word-by-word. Write each language version independently as if by a native author.
@@ -119,38 +121,38 @@ RELATED BOOKS & DEEP EXPLANATION:
 
 Output STRICT JSON with this exact schema:
 {
-  "title": { "ar": "", "fr": "", "en": "" },
+  "title": { "ar": "", "fr": "", "en": "", "de": "" },
   "author": "Author Name",
   "category": "Mindset | Business | Tech | Science | History | Philosophy",
-  "tagline": { "ar": "", "fr": "", "en": "" },
+  "tagline": { "ar": "", "fr": "", "en": "", "de": "" },
   "description": "Short description in English (1-2 sentences)",
   "coverPrompt": "Detailed image generation prompt for the book cover in English",
-  "relatedBooks": { "ar": "", "fr": "", "en": "" },
-  "deepExplanation": { "ar": "", "fr": "", "en": "" },
-  "finalSummary": { "ar": "", "fr": "", "en": "" },
-  "mainConcepts": { "ar": "", "fr": "", "en": "" },
+  "relatedBooks": { "ar": "", "fr": "", "en": "", "de": "" },
+  "deepExplanation": { "ar": "", "fr": "", "en": "", "de": "" },
+  "finalSummary": { "ar": "", "fr": "", "en": "", "de": "" },
+  "mainConcepts": { "ar": "", "fr": "", "en": "", "de": "" },
   "keyLessons": [
-    { "ar": "", "fr": "", "en": "" },
-    { "ar": "", "fr": "", "en": "" }
+    { "ar": "", "fr": "", "en": "", "de": "" },
+    { "ar": "", "fr": "", "en": "", "de": "" }
   ],
   "keyInsights": [
-    { "ar": "", "fr": "", "en": "" },
-    { "ar": "", "fr": "", "en": "" }
+    { "ar": "", "fr": "", "en": "", "de": "" },
+    { "ar": "", "fr": "", "en": "", "de": "" }
   ],
-  "implementationGuide": { "ar": "", "fr": "", "en": "" },
+  "implementationGuide": { "ar": "", "fr": "", "en": "", "de": "" },
   "episodes": [
     {
       "number": 1,
-      "title": { "ar": "", "fr": "", "en": "" },
-      "hook": { "ar": "", "fr": "", "en": "" },
-      "content": { "ar": "", "fr": "", "en": "" },
-      "keyIdeas": { "ar": "", "fr": "", "en": "" },
-      "actionableTips": { "ar": "", "fr": "", "en": "" },
-      "importantQuotes": { "ar": "", "fr": "", "en": "" },
-      "practicalExamples": { "ar": "", "fr": "", "en": "" },
-      "keyTakeaway": { "ar": "", "fr": "", "en": "" },
-      "cliffhanger": { "ar": "", "fr": "", "en": "" },
-      "summary": { "ar": "", "fr": "", "en": "" },
+      "title": { "ar": "", "fr": "", "en": "", "de": "" },
+      "hook": { "ar": "", "fr": "", "en": "", "de": "" },
+      "content": { "ar": "", "fr": "", "en": "", "de": "" },
+      "keyIdeas": { "ar": "", "fr": "", "en": "", "de": "" },
+      "actionableTips": { "ar": "", "fr": "", "en": "", "de": "" },
+      "importantQuotes": { "ar": "", "fr": "", "en": "", "de": "" },
+      "practicalExamples": { "ar": "", "fr": "", "en": "", "de": "" },
+      "keyTakeaway": { "ar": "", "fr": "", "en": "", "de": "" },
+      "cliffhanger": { "ar": "", "fr": "", "en": "", "de": "" },
+      "summary": { "ar": "", "fr": "", "en": "", "de": "" },
       "wordCount": 400
     }
   ]
@@ -195,38 +197,38 @@ Include premium summary fields:
 
 Output STRICT JSON with this exact schema:
 {
-  "title": { "ar": "", "fr": "", "en": "" },
+  "title": { "ar": "", "fr": "", "en": "", "de": "" },
   "author": "Author Name",
   "category": "Mindset | Business | Tech | Science | History | Philosophy",
-  "tagline": { "ar": "", "fr": "", "en": "" },
+  "tagline": { "ar": "", "fr": "", "en": "", "de": "" },
   "description": "Short description in English (1-2 sentences)",
   "coverPrompt": "Detailed image generation prompt for the book cover in English",
-  "relatedBooks": { "ar": "", "fr": "", "en": "" },
-  "deepExplanation": { "ar": "", "fr": "", "en": "" },
-  "finalSummary": { "ar": "", "fr": "", "en": "" },
-  "mainConcepts": { "ar": "", "fr": "", "en": "" },
+  "relatedBooks": { "ar": "", "fr": "", "en": "", "de": "" },
+  "deepExplanation": { "ar": "", "fr": "", "en": "", "de": "" },
+  "finalSummary": { "ar": "", "fr": "", "en": "", "de": "" },
+  "mainConcepts": { "ar": "", "fr": "", "en": "", "de": "" },
   "keyLessons": [
-    { "ar": "", "fr": "", "en": "" },
-    { "ar": "", "fr": "", "en": "" }
+    { "ar": "", "fr": "", "en": "", "de": "" },
+    { "ar": "", "fr": "", "en": "", "de": "" }
   ],
   "keyInsights": [
-    { "ar": "", "fr": "", "en": "" },
-    { "ar": "", "fr": "", "en": "" }
+    { "ar": "", "fr": "", "en": "", "de": "" },
+    { "ar": "", "fr": "", "en": "", "de": "" }
   ],
-  "implementationGuide": { "ar": "", "fr": "", "en": "" },
+  "implementationGuide": { "ar": "", "fr": "", "en": "", "de": "" },
   "episodes": [
     {
       "number": 1,
-      "title": { "ar": "", "fr": "", "en": "" },
-      "hook": { "ar": "", "fr": "", "en": "" },
-      "content": { "ar": "", "fr": "", "en": "" },
-      "keyIdeas": { "ar": "", "fr": "", "en": "" },
-      "actionableTips": { "ar": "", "fr": "", "en": "" },
-      "importantQuotes": { "ar": "", "fr": "", "en": "" },
-      "practicalExamples": { "ar": "", "fr": "", "en": "" },
-      "keyTakeaway": { "ar": "", "fr": "", "en": "" },
-      "cliffhanger": { "ar": "", "fr": "", "en": "" },
-      "summary": { "ar": "", "fr": "", "en": "" },
+      "title": { "ar": "", "fr": "", "en": "", "de": "" },
+      "hook": { "ar": "", "fr": "", "en": "", "de": "" },
+      "content": { "ar": "", "fr": "", "en": "", "de": "" },
+      "keyIdeas": { "ar": "", "fr": "", "en": "", "de": "" },
+      "actionableTips": { "ar": "", "fr": "", "en": "", "de": "" },
+      "importantQuotes": { "ar": "", "fr": "", "en": "", "de": "" },
+      "practicalExamples": { "ar": "", "fr": "", "en": "", "de": "" },
+      "keyTakeaway": { "ar": "", "fr": "", "en": "", "de": "" },
+      "cliffhanger": { "ar": "", "fr": "", "en": "", "de": "" },
+      "summary": { "ar": "", "fr": "", "en": "", "de": "" },
       "wordCount": 400
     }
   ]
@@ -240,7 +242,7 @@ function parseBookEpisodes(raw: string): BookEpisodes | null {
     const parsed = JSON.parse(cleaned);
     if (!parsed.episodes || !Array.isArray(parsed.episodes) || parsed.episodes.length !== 10) return null;
 
-    const targetLangs: LangCode[] = ['ar', 'fr', 'en'];
+    const targetLangs: LangCode[] = ['ar', 'fr', 'en', 'de'];
     for (const ep of parsed.episodes) {
       for (const field of ['title', 'hook', 'content', 'keyTakeaway', 'keyIdeas', 'actionableTips', 'importantQuotes', 'practicalExamples', 'cliffhanger', 'summary']) {
         if (!ep[field] || typeof ep[field] !== 'object') return null;
@@ -315,6 +317,247 @@ async function callWithFallback(
 
 function extractValidationErrors(validation: ValidationResult): string[] {
   return validation.errors.slice(0, 5).map((e) => e.replace(/Chapter \d+:/, '').trim());
+}
+
+const LOCALIZED_LABELS: Record<LangCode, { chapter: string; summary: string; concepts: string; execution: string }> = {
+  ar: { chapter: 'الفصل', summary: 'الملخص', concepts: 'المفاهيم', execution: 'التنفيذ' },
+  fr: { chapter: 'Chapitre', summary: 'Résumé', concepts: 'Concepts', execution: 'Exécution' },
+  en: { chapter: 'Chapter', summary: 'Summary', concepts: 'Concepts', execution: 'Execution' },
+  de: { chapter: 'Kapitel', summary: 'Zusammenfassung', concepts: 'Konzepte', execution: 'Umsetzung' },
+};
+
+function getLanguageName(lang: LangCode): string {
+  const names: Record<LangCode, string> = { ar: 'Arabic', fr: 'French', en: 'English', de: 'German' };
+  return names[lang];
+}
+
+function buildLocalizedSystemPrompt(lang: LangCode): string {
+  const labels = LOCALIZED_LABELS[lang];
+  const langName = getLanguageName(lang);
+
+  return `You are a production-grade book generator for a reading platform.
+
+================================================
+CRITICAL RULES (HARD)
+================================================
+1. NEVER return empty chapters.
+2. ALWAYS return exactly 10 chapters.
+3. NEVER mix languages inside one output.
+4. NEVER use English UI words in non-English languages.
+5. DO NOT translate only — fully localize and rebuild content per language.
+6. Generate ALL content EXCLUSIVELY in ${langName} (${lang}).
+
+================================================
+LOCALIZED LABELS
+================================================
+- ${labels.chapter}: chapter heading
+- ${labels.summary}: summary heading
+- ${labels.concepts}: concepts heading
+- ${labels.execution}: execution heading
+
+================================================
+CHAPTER STRUCTURE (EXACTLY 10 CHAPTERS)
+================================================
+Each chapter MUST have:
+- id: number (1 to 10)
+- title: string in ${langName}
+- content: 150–300 words in ${langName}
+
+Use chapter.id ONLY for ordering. Frontend uses id, not title.
+
+================================================
+CONTENT QUALITY
+================================================
+- Each chapter content: minimum 150 words, maximum 300 words
+- Write naturally in ${langName} — not translated
+- Use 2–4 well-structured paragraphs
+- Clear, valuable, native-quality writing
+- If the book is unknown, generate COMPLETE synthetic but realistic content
+
+================================================
+TOP-LEVEL FIELDS (all in ${langName})
+================================================
+- summary: Deep structured summary (200–300 words)
+- concepts: Array of 4 key concepts
+- execution: Array of 4 actionable execution steps
+
+================================================
+ANTI-ERROR RULES
+================================================
+- chapters array MUST NEVER be empty
+- no partial output allowed
+- no missing fields allowed
+- no placeholder text or ellipsis
+
+================================================
+OUTPUT FORMAT (STRICT JSON ONLY)
+================================================
+{
+  "title": "string (in ${langName})",
+  "author": "string",
+  "language": "${lang}",
+  "labels": {
+    "chapter": "${labels.chapter}",
+    "summary": "${labels.summary}",
+    "concepts": "${labels.concepts}",
+    "execution": "${labels.execution}"
+  },
+  "chapters": [
+    {
+      "id": 1,
+      "title": "string (in ${langName})",
+      "content": "string (in ${langName}, 150-300 words)"
+    }
+  ],
+  "summary": "string (in ${langName}, 200-300 words)",
+  "concepts": ["string 1", "string 2", "string 3", "string 4"],
+  "execution": ["string 1", "string 2", "string 3", "string 4"]
+}
+Return ONLY valid JSON. No markdown, no code fences, no explanation. No empty fields. No placeholder text. Do NOT truncate.`;
+}
+
+function parseLocalizedEpisodes(raw: string, lang: LangCode): BookEpisodes | null {
+  let cleaned = raw.replace(/```json\s*/i, '').replace(/```/g, '').trim();
+  cleaned = cleaned.replace(/\\(?!["\\/bfnrtu])/g, '');
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (!parsed.chapters || !Array.isArray(parsed.chapters) || parsed.chapters.length < 6) return null;
+
+    const fill = (value: unknown): MultilingualText => {
+      const result: MultilingualText = { ar: '', fr: '', en: '', de: '' };
+      if (typeof value === 'string') result[lang] = value;
+      return result;
+    };
+
+    const fillList = (values: unknown[]): MultilingualText[] =>
+      values.map(v => fill(v));
+
+    const deriveFromContent = (content: string, type: 'hook' | 'keyIdeas' | 'actionableTips' | 'importantQuotes' | 'practicalExamples' | 'keyTakeaway' | 'cliffhanger' | 'summary', chapterTitle: string): string => {
+      if (!content) return '';
+      const sentences = content.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+      switch (type) {
+        case 'hook': return sentences.slice(0, 2).join(' ');
+        case 'summary': return sentences.slice(-3).join(' ');
+        case 'keyTakeaway': return sentences.slice(1, 3).join(' ');
+        case 'keyIdeas': return sentences.slice(0, 3).join(' ');
+        case 'actionableTips': return `Apply the concepts from "${chapterTitle}": ${sentences.slice(1, 3).join(' ')}`;
+        case 'importantQuotes': return `"${sentences[0]?.replace(/^["']|["']$/g, '') || content.slice(0, 100)}"`;
+        case 'practicalExamples': return `Example: ${sentences.slice(1, 3).join(' ')}`;
+        case 'cliffhanger': return `Next, we will explore deeper insights building on: ${chapterTitle}. ${sentences.slice(-1)[0] || ''}`;
+      }
+    };
+
+    const episodes: RichChapter[] = parsed.chapters.map((ch: Record<string, unknown>, i: number) => {
+      const chTitle = typeof ch.title === 'string' ? ch.title : '';
+      const chContent = typeof ch.content === 'string' ? ch.content : '';
+      return {
+        number: i + 1,
+        title: fill(chTitle),
+        hook: fill(deriveFromContent(chContent, 'hook', chTitle)),
+        content: fill(chContent),
+        keyIdeas: fill(deriveFromContent(chContent, 'keyIdeas', chTitle)),
+        actionableTips: fill(deriveFromContent(chContent, 'actionableTips', chTitle)),
+        importantQuotes: fill(deriveFromContent(chContent, 'importantQuotes', chTitle)),
+        practicalExamples: fill(deriveFromContent(chContent, 'practicalExamples', chTitle)),
+        keyTakeaway: fill(deriveFromContent(chContent, 'keyTakeaway', chTitle)),
+        cliffhanger: fill(deriveFromContent(chContent, 'cliffhanger', chTitle)),
+        summary: fill(deriveFromContent(chContent, 'summary', chTitle)),
+        wordCount: chContent.split(/\s+/).length,
+      };
+    });
+
+    const rawSummary = typeof parsed.summary === 'string' ? parsed.summary : '';
+    const rawConcepts = Array.isArray(parsed.concepts) ? (parsed.concepts as unknown[]).map(c => typeof c === 'string' ? c : '') : [];
+    const rawExecution = Array.isArray(parsed.execution) ? (parsed.execution as unknown[]).map(e => typeof e === 'string' ? e : '') : [];
+
+    const book: BookEpisodes = {
+      title: fill(parsed.title || ''),
+      author: typeof parsed.author === 'string' ? parsed.author : 'AI Generated',
+      category: typeof parsed.category === 'string' ? parsed.category : 'General',
+      tagline: fill(''),
+      description: rawSummary.slice(0, 200),
+      coverPrompt: '',
+      relatedBooks: fill(''),
+      deepExplanation: fill(''),
+      finalSummary: fill(rawSummary),
+      mainConcepts: fill(rawConcepts.join('\n')),
+      keyLessons: fillList(rawConcepts),
+      keyInsights: fillList(rawExecution),
+      implementationGuide: fill(rawExecution.join('\n')),
+      episodes,
+    };
+
+    return book;
+  } catch {
+    return null;
+  }
+}
+
+export async function generateLocalizedEpisodes(
+  bookTitle: string,
+  author: string | undefined,
+  lang: LangCode
+): Promise<GenerationResult> {
+  const startTime = Date.now();
+
+  try {
+    const systemPrompt = buildLocalizedSystemPrompt(lang);
+    const userPrompt = author
+      ? `Generate a complete 10-chapter book about "${bookTitle}" by ${author}. ALL content must be in ${getLanguageName(lang)}. Each chapter content field MUST be 450-550 words (5-7 paragraphs). The finalSummary MUST be 800+ words. Write deep, premium-quality content.`
+      : `Generate a complete 10-chapter book about "${bookTitle}". ALL content must be in ${getLanguageName(lang)}. Each chapter content field MUST be 450-550 words (5-7 paragraphs). The finalSummary MUST be 800+ words. Write deep, premium-quality content.`;
+
+    const result = await callAIRouter(systemPrompt, userPrompt, MAX_TOKENS_SAFE, 0.7);
+
+    if (result.content) {
+      const parsed = parseLocalizedEpisodes(result.content, lang);
+      if (parsed) {
+        const fixed = ensureChapterCount(parsed);
+        const normalized = {
+          ...fixed,
+          episodes: fixed.episodes.map((ep, i) => normalizeChapter(ep, i + 1)),
+        };
+
+        const validation = validateBook(normalized);
+        if (validation.valid) {
+          return {
+            book: normalized,
+            provider: result.provider,
+            model: result.model,
+            latencyMs: Date.now() - startTime,
+          };
+        }
+
+        // Retry with fallback if validation fails
+        const fallbackUserPrompt = author
+          ? `Generate 10 episodes about "${bookTitle}" by ${author}. ALL content in ${getLanguageName(lang)}. Each chapter content: 450-550 words. Write substantial content.`
+          : `Generate 10 episodes about "${bookTitle}". ALL content in ${getLanguageName(lang)}. Each chapter content: 450-550 words. Write substantial content.`;
+
+        const fallbackResult = await callAIRouter(FALLBACK_SYSTEM_PROMPT, fallbackUserPrompt, MAX_TOKENS_SAFE, 0.5);
+        if (fallbackResult.content) {
+          const fallbackParsed = parseLocalizedEpisodes(fallbackResult.content, lang);
+          if (fallbackParsed) {
+            fallbackParsed.episodes.forEach((ep, i) => { ep.number = i + 1; });
+            const fbFixed = ensureChapterCount(fallbackParsed);
+            const fbNormalized = {
+              ...fbFixed,
+              episodes: fbFixed.episodes.map((ep, i) => normalizeChapter(ep, i + 1)),
+            };
+            return {
+              book: fbNormalized,
+              provider: fallbackResult.provider,
+              model: fallbackResult.model,
+              latencyMs: Date.now() - startTime,
+            };
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[generateLocalizedEpisodes] Error:', err);
+  }
+
+  const labels = LOCALIZED_LABELS[lang];
+  return generateLocalFallbackBook(bookTitle, author, Date.now() - startTime, lang, labels);
 }
 
 export async function generateEpisodes(
@@ -404,16 +647,28 @@ export async function generateEpisodes(
   return generateLocalFallbackBook(bookTitle, author, Date.now() - startTime);
 }
 
-function generateLocalFallbackBook(bookTitle: string, author: string | undefined, elapsedMs: number): GenerationResult {
+function generateLocalFallbackBook(
+  bookTitle: string,
+  author: string | undefined,
+  elapsedMs: number,
+  lang?: LangCode,
+  labels?: { chapter: string; summary: string; concepts: string; execution: string },
+): GenerationResult {
   const displayAuthor = author || 'AI Generated';
   const category = 'General';
   const tagline = `${bookTitle} — A comprehensive overview`;
+  const chapterLabel = labels?.chapter || 'Chapter';
 
-  const mt = (text: string) => ({ ar: text, fr: text, en: text });
+  const mt = (text: string) => {
+    if (!lang) return { ar: text, fr: text, en: text, de: text };
+    const result: MultilingualText = { ar: '', fr: '', en: '', de: '' };
+    result[lang] = text;
+    return result;
+  };
 
   const chapters: RichChapter[] = Array.from({ length: 10 }, (_, i) => {
     const num = i + 1;
-    const title = `Chapter ${num}: ${generateLocalChapterTitle(bookTitle, num)}`;
+    const title = `${chapterLabel} ${num}: ${generateLocalChapterTitle(bookTitle, num, lang)}`;
     const content = generateLocalChapterContent(bookTitle, num);
     const hook = generateLocalHook(bookTitle, num);
     const keyIdeas = `The core idea of this chapter is understanding how ${bookTitle} applies to real-world scenarios. By exploring practical examples, we can see the direct impact and relevance of these concepts in daily life and professional settings.`;
@@ -491,20 +746,64 @@ This book provides a solid foundation for anyone looking to deepen their underst
   };
 }
 
-function generateLocalChapterTitle(bookTitle: string, chapterNum: number): string {
-  const titles = [
-    `Introduction to ${bookTitle}`,
-    `The Core Principles of ${bookTitle}`,
-    `Understanding the Foundations`,
-    `Practical Applications and Strategies`,
-    `Real-World Examples and Case Studies`,
-    `Advanced Concepts and Techniques`,
-    `Common Challenges and How to Overcome Them`,
-    `Building Your Personal Framework`,
-    `Integration with Daily Practice`,
-    `Next Steps and Continuous Growth`,
-  ];
-  return titles[chapterNum - 1] || `${bookTitle}: Key Insights`;
+function generateLocalChapterTitle(bookTitle: string, chapterNum: number, lang?: LangCode): string {
+  const labels = LOCALIZED_LABELS;
+  const label = lang ? labels[lang].chapter : 'Chapter';
+  const idx = chapterNum - 1;
+
+  const allTitles: Record<LangCode, string[]> = {
+    en: [
+      `Introduction to ${bookTitle}`,
+      `The Core Principles of ${bookTitle}`,
+      `Understanding the Foundations`,
+      `Practical Applications and Strategies`,
+      `Real-World Examples and Case Studies`,
+      `Advanced Concepts and Techniques`,
+      `Common Challenges and How to Overcome Them`,
+      `Building Your Personal Framework`,
+      `Integration with Daily Practice`,
+      `Next Steps and Continuous Growth`,
+    ],
+    ar: [
+      `مقدمة إلى ${bookTitle}`,
+      `المبادئ الأساسية لـ ${bookTitle}`,
+      `فهم الأسس`,
+      `التطبيقات العملية والاستراتيجيات`,
+      `أمثلة واقعية ودراسات حالة`,
+      `مفاهيم وتقنيات متقدمة`,
+      `التحديات الشائعة وكيفية التغلب عليها`,
+      `بناء إطارك الشخصي`,
+      `التكامل مع الممارسة اليومية`,
+      `الخطوات التالية والنمو المستمر`,
+    ],
+    fr: [
+      `Introduction à ${bookTitle}`,
+      `Les Principes Fondamentaux de ${bookTitle}`,
+      `Comprendre les Fondements`,
+      `Applications Pratiques et Stratégies`,
+      `Exemples Concrets et Études de Cas`,
+      `Concepts et Techniques Avancés`,
+      `Défis Courants et Solutions`,
+      `Construire Votre Cadre Personnel`,
+      `Intégration dans la Pratique Quotidienne`,
+      `Prochaines Étapes et Croissance Continue`,
+    ],
+    de: [
+      `Einführung in ${bookTitle}`,
+      `Die Grundprinzipien von ${bookTitle}`,
+      `Die Grundlagen Verstehen`,
+      `Praktische Anwendungen und Strategien`,
+      `Beispiele aus der Praxis und Fallstudien`,
+      `Fortgeschrittene Konzepte und Techniken`,
+      `Häufige Herausforderungen und Lösungen`,
+      `Aufbau Ihres Persönlichen Rahmens`,
+      `Integration in den Alltag`,
+      `Nächste Schritte und Kontinuierliches Wachstum`,
+    ],
+  };
+
+  const titles = lang ? allTitles[lang] : allTitles.en;
+  return titles[idx] || `${label} ${chapterNum}: ${bookTitle} — Key Insights`;
 }
 
 function generateLocalHook(bookTitle: string, chapterNum: number): string {

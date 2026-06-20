@@ -371,6 +371,28 @@ function discoverHandlers(): ProviderHandler[] {
 
   const cfProvider = new CloudflareProvider();
   if (cfProvider.isConfigured()) {
+    // Try gemma-4-26b first (newer, more capable model)
+    const gemmaProvider = new CloudflareProvider('@cf/google/gemma-4-26b-a4b-it');
+    if (gemmaProvider.getModel() !== cfProvider.getModel()) {
+      handlers.push({
+        name: 'cloudflare',
+        model: gemmaProvider.getModel(),
+        isConfigured: () => gemmaProvider.isConfigured(),
+        isHealthy: async () => validateCloudflareCredentials(),
+        execute: async (messages, options) => {
+          const healthy = await validateCloudflareCredentials();
+          if (!healthy) {
+            throw Object.assign(
+              new Error('[Cloudflare] Invalid API credentials — skipping provider'),
+              { status: 401 }
+            );
+          }
+          return gemmaProvider.generate(messages, options);
+        },
+      });
+    }
+
+    // Fallback to configured/default model
     handlers.push({
       name: 'cloudflare',
       model: cfProvider.getModel(),

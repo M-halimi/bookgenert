@@ -25,12 +25,11 @@ export class CloudflareProvider {
   private timeoutMs: number;
   private credentialsValid: boolean | null;
 
-  constructor() {
+  constructor(model?: string) {
     this.accountId = process.env.CLOUDFLARE_ACCOUNT_ID || '';
     this.apiToken =
       process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_API_KEY || '';
-    this.defaultModel =
-      process.env.CLOUDFLARE_MODEL || '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+    this.defaultModel = model || process.env.CLOUDFLARE_MODEL || '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
     this.timeoutMs = 120000;
     this.credentialsValid = null;
   }

@@ -15,7 +15,7 @@ export interface ChapterFix {
 const EXPECTED_CHAPTERS = 10;
 const MIN_WORDS_PER_CONTENT = 150;
 const MIN_PARAGRAPHS = 2;
-const TARGET_LANGS: LangCode[] = ['ar', 'fr', 'en'];
+const TARGET_LANGS: LangCode[] = ['ar', 'fr', 'en', 'de'];
 
 const CONTENT_FIELDS: (keyof RichChapter)[] = [
   'title', 'hook', 'content', 'keyTakeaway', 'keyIdeas',
@@ -156,7 +156,7 @@ export function needsRegeneration(book: BookEpisodes): ChapterFix[] {
 }
 
 export function normalizeChapter(chapter: Partial<RichChapter>, chapterNumber: number): RichChapter {
-  const emptyMt = (): { ar: string; fr: string; en: string } => ({ ar: '', fr: '', en: '' });
+  const emptyMt = (): { ar: string; fr: string; en: string; de: string } => ({ ar: '', fr: '', en: '', de: '' });
 
   const ch: RichChapter = {
     number: chapterNumber,
@@ -183,16 +183,16 @@ export function ensureChapterCount(book: BookEpisodes): BookEpisodes {
     const idx = episodes.length + 1;
     episodes.push({
       number: idx,
-      title: { ar: '', fr: '', en: '' },
-      hook: { ar: '', fr: '', en: '' },
-      content: { ar: '', fr: '', en: '' },
-      keyIdeas: { ar: '', fr: '', en: '' },
-      actionableTips: { ar: '', fr: '', en: '' },
-      importantQuotes: { ar: '', fr: '', en: '' },
-      practicalExamples: { ar: '', fr: '', en: '' },
-      keyTakeaway: { ar: '', fr: '', en: '' },
-      cliffhanger: { ar: '', fr: '', en: '' },
-      summary: { ar: '', fr: '', en: '' },
+      title: { ar: '', fr: '', en: '', de: '' },
+      hook: { ar: '', fr: '', en: '', de: '' },
+      content: { ar: '', fr: '', en: '', de: '' },
+      keyIdeas: { ar: '', fr: '', en: '', de: '' },
+      actionableTips: { ar: '', fr: '', en: '', de: '' },
+      importantQuotes: { ar: '', fr: '', en: '', de: '' },
+      practicalExamples: { ar: '', fr: '', en: '', de: '' },
+      keyTakeaway: { ar: '', fr: '', en: '', de: '' },
+      cliffhanger: { ar: '', fr: '', en: '', de: '' },
+      summary: { ar: '', fr: '', en: '', de: '' },
       wordCount: 0,
     });
   }

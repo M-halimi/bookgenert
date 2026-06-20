@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
         chapters: { orderBy: { chapterNumber: 'asc' } },
         bookSummary: true,
         embedding: true,
+        author: { select: { name: true } },
       },
     });
 
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
       coverImage: book.coverImage,
       coverPrompt: book.coverPrompt,
       category: book.category,
-      author: book.authorId,
+      author: book.author?.name || 'AI Generated',
       episodes,
       chapters: book.chapters.map((ch) => ({
         number: ch.chapterNumber,

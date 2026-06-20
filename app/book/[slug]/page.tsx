@@ -6,21 +6,11 @@ import { useParams, useSearchParams } from 'next/navigation';
 import EpisodeCard from '@/components/reader/EpisodeCard';
 import ProgressBar from '@/components/ui/ProgressBar';
 import LangSwitcher from '@/components/ui/LangSwitcher';
-import type { BookEpisodes, LangCode, RichChapter } from '@/lib/groq';
+import type { BookEpisodes, LangCode, MultilingualText } from '@/lib/groq';
 import { MOODS, type MoodId, type ScoredMood } from '@/lib/moods';
 import { assignMoods, classifyBook } from '@/lib/mood-store';
 
 const TOTAL_EPISODES = 10;
-
-interface LibraryEntry {
-  slug: string;
-  title: string;
-  author: string;
-  category: string;
-  tagline: string;
-  coverUrl: string;
-  moods?: ScoredMood[];
-}
 
 export default function BookPage() {
   const params = useParams();
@@ -34,7 +24,6 @@ export default function BookPage() {
   const [moodMessage, setMoodMessage] = useState('');
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [lang, setLang] = useState<LangCode>('ar');
-  const [cacheInfo, setCacheInfo] = useState<{ cached: boolean; similarity?: number } | null>(null);
   const [activeTab, setActiveTab] = useState<'chapters' | 'summary' | 'concepts' | 'guide'>('chapters');
 
   const title =
@@ -44,7 +33,7 @@ export default function BookPage() {
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(' ');
   const author = searchParams.get('author') || '';
-  const coverUrl = searchParams.get('cover') || '';
+
 
   useEffect(() => {
     try {
@@ -57,11 +46,6 @@ export default function BookPage() {
     if (!slug) return;
     const loadFromDb = async () => {
       try {
-        const cached = localStorage.getItem(`bookflix_episodes_${slug}`);
-        if (cached) {
-          setData(JSON.parse(cached));
-          return;
-        }
         const res = await fetch(`/api/books/content?slug=${slug}`);
         if (res.ok) {
           const json = await res.json();
@@ -83,8 +67,8 @@ export default function BookPage() {
             implementationGuide: json.episodes?.implementationGuide ||
               (json.implementationGuide ? { ar: json.implementationGuide, fr: json.implementationGuide, en: json.implementationGuide } : { ar: '', fr: '', en: '' }),
             episodes: json.chapters?.length > 0
-              ? json.chapters.map((ch: RichChapter, i: number) => ({
-                  number: i + 1,
+              ? json.chapters.map((ch: { number?: number; title?: MultilingualText; hook?: MultilingualText; content?: MultilingualText; keyIdeas?: MultilingualText; actionableTips?: MultilingualText; importantQuotes?: MultilingualText; practicalExamples?: MultilingualText; keyTakeaway?: MultilingualText; cliffhanger?: MultilingualText; summary?: MultilingualText; wordCount?: number }) => ({
+                  number: ch.number || 0,
                   title: ch.title || { ar: '', fr: '', en: '' },
                   hook: ch.hook || { ar: '', fr: '', en: '' },
                   content: ch.content || { ar: '', fr: '', en: '' },
@@ -100,7 +84,6 @@ export default function BookPage() {
               : json.episodes?.episodes || [],
           };
           setData(bookData);
-          localStorage.setItem(`bookflix_episodes_${slug}`, JSON.stringify(bookData));
         }
       } catch {}
     };
@@ -111,7 +94,6 @@ export default function BookPage() {
     if (!slug) return;
     setLoading(true);
     setError('');
-    setCacheInfo(null);
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -119,29 +101,17 @@ export default function BookPage() {
         body: JSON.stringify({ title, author: author || undefined, lang }),
       });
 
-      const episodes: BookEpisodes & { _cached?: boolean; _cacheSimilarity?: number; _error?: string } = await res.json();
+      const result: BookEpisodes & { _error?: string } = await res.json();
 
-      if (episodes._error) {
-        throw new Error(episodes._error);
+      if (result._error) {
+        throw new Error(result._error);
       }
 
       if (!res.ok) {
         throw new Error('Generation failed');
       }
 
-      setData(episodes);
-
-      if (episodes._cached) {
-        setCacheInfo({
-          cached: true,
-          similarity: episodes._cacheSimilarity,
-        });
-      }
-
-      localStorage.setItem(
-        `bookflix_episodes_${slug}`,
-        JSON.stringify(episodes)
-      );
+      setData(result);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Generation failed');
     } finally {
@@ -189,32 +159,13 @@ export default function BookPage() {
         assignMoods(slug, title, scoredMoods, 'ai');
       }
 
-      try {
-        const library = JSON.parse(
-          localStorage.getItem('bookflix_library') || '[]'
-        );
-        const existing = library.findIndex((b: LibraryEntry) => b.slug === slug);
-        const entry: LibraryEntry = {
-          slug,
-          title,
-          author,
-          category: data.category,
-          tagline: data.tagline?.ar || `${title} — ${data.category}`,
-          coverUrl,
-          moods: scoredMoods,
-        };
-        if (existing >= 0) library[existing] = entry;
-        else library.push(entry);
-        localStorage.setItem('bookflix_library', JSON.stringify(library));
-      } catch {}
-
       setMoodMessage('Mood analysis complete!');
     } catch {
       setMoodMessage('Mood analysis failed. Try again.');
     } finally {
       setMoodLoading(false);
     }
-  }, [slug, data, title, author, coverUrl]);
+  }, [slug, data, title, author]);
 
   const currentProgress = progress[slug] || 0;
   const currentTitle = data?.title?.[lang] || title;
@@ -290,12 +241,7 @@ export default function BookPage() {
           <span className="inline-block mt-2 px-3 py-1 bg-red-600/20 text-red-400 text-sm rounded-full">
             {data.category}
           </span>
-          {cacheInfo?.cached && (
-            <span className="inline-block mt-2 ml-2 px-3 py-1 bg-blue-600/20 text-blue-400 text-sm rounded-full">
-              Loaded from cache
-              {cacheInfo.similarity && ` (${(cacheInfo.similarity * 100).toFixed(0)}% match)`}
-            </span>
-          )}
+
         </div>
 
         <ProgressBar completed={currentProgress} total={TOTAL_EPISODES} />
@@ -451,12 +397,7 @@ export default function BookPage() {
                   <span className="text-zinc-500">Author</span>
                   <span className="text-zinc-300">{data.author}</span>
                 </div>
-                {cacheInfo?.cached && (
-                  <div className="flex justify-between">
-                    <span className="text-zinc-500">Cache Status</span>
-                    <span className="text-blue-400">Loaded from cache</span>
-                  </div>
-                )}
+
               </div>
             </div>
           </div>
