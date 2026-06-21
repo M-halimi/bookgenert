@@ -60,9 +60,26 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    console.error('Library fetch error:', error);
+    const message = error instanceof Error ? error.message : String(error);
+    const isDbError = message.includes('Can\'t reach database') ||
+      message.includes('Authentication') ||
+      message.includes('connect ECONNREFUSED') ||
+      message.includes('getaddrinfo') ||
+      message.includes('Prisma');
+    const dbUrl = (process.env.DATABASE_URL || '').replace(/\/\/[^:]+:[^@]+@/, '//USER:PASSWORD@');
+    console.error('Library fetch error:', {
+      error: message,
+      isDbError,
+      database_url: isDbError ? dbUrl : undefined,
+      node_env: process.env.NODE_ENV,
+    });
     return NextResponse.json(
-      { error: 'Failed to fetch library' },
+      {
+        error: isDbError
+          ? 'Database connection unavailable. Check DATABASE_URL configuration in Vercel Dashboard.'
+          : 'Failed to fetch library',
+        _debug: process.env.NODE_ENV === 'development' ? message : undefined,
+      },
       { status: 500 },
     );
   }

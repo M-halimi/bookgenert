@@ -61,9 +61,27 @@ export async function GET(request: NextRequest) {
       createdAt: book.createdAt.toISOString(),
     });
   } catch (error) {
-    console.error('Book content fetch error:', error);
+    const message = error instanceof Error ? error.message : String(error);
+    const isDbError = message.includes('Can\'t reach database') ||
+      message.includes('Authentication') ||
+      message.includes('connect ECONNREFUSED') ||
+      message.includes('getaddrinfo') ||
+      message.includes('Prisma');
+    const dbUrl = (process.env.DATABASE_URL || '').replace(/\/\/[^:]+:[^@]+@/, '//USER:PASSWORD@');
+    console.error('Book content fetch error:', {
+      error: message,
+      slug,
+      isDbError,
+      database_url: isDbError ? dbUrl : undefined,
+      node_env: process.env.NODE_ENV,
+    });
     return NextResponse.json(
-      { error: 'Failed to fetch book content' },
+      {
+        error: isDbError
+          ? 'Database connection unavailable. Check DATABASE_URL configuration in Vercel Dashboard.'
+          : 'Failed to fetch book content',
+        _debug: process.env.NODE_ENV === 'development' ? message : undefined,
+      },
       { status: 500 },
     );
   }

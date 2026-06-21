@@ -304,6 +304,81 @@ function checkProviderRateLimit(name: AIProviderName, minIntervalMs: number): bo
   return true;
 }
 
+function createGeminiHandler(): ProviderHandler | null {
+  const geminiKey = process.env.GEMINI_API_KEY;
+  if (!geminiKey) return null;
+
+  const GEMINI_MODELS = [
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-1.5-pro',
+  ];
+
+  for (const model of GEMINI_MODELS) {
+    const routerState = getRouterState();
+    if (routerState.hasModelFailed('gemini', model)) continue;
+
+    return {
+      name: 'gemini',
+      model,
+      isConfigured: () => true,
+      execute: async (messages, options) => {
+        const combinedContent = messages
+          .map(m => m.role === 'system' ? `[System Instruction]\n${m.content}\n[/System Instruction]` : m.content)
+          .join('\n\n');
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), options.timeout ?? 120000);
+
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: combinedContent }] }],
+              generationConfig: {
+                maxOutputTokens: Math.min(options.maxTokens ?? 8192, 8192),
+                temperature: options.temperature ?? 0.7,
+              },
+            }),
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
+
+          if (!res.ok) {
+            const errBody = await res.text().catch(() => 'unknown');
+            throw Object.assign(
+              new Error(`[Gemini] ${res.status}: ${errBody.slice(0, 400)}`),
+              { status: res.status }
+            );
+          }
+
+          const data: { candidates?: { content?: { parts?: { text?: string }[] } }[] } = await res.json();
+          const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+          if (!content) {
+            throw Object.assign(new Error('[Gemini] Empty response'), { status: 0 });
+          }
+
+          return content;
+        } catch (err) {
+          clearTimeout(timeoutId);
+          if (err instanceof Error && err.name === 'AbortError') {
+            throw Object.assign(
+              new Error(`[Gemini] Request timed out after ${options.timeout ?? 120000}ms`),
+              { status: 0 }
+            );
+          }
+          throw err;
+        }
+      },
+    };
+  }
+  return null;
+}
+
 function discoverHandlers(): ProviderHandler[] {
   const handlers: ProviderHandler[] = [];
   const groqKey = process.env.GROQ_API_KEY;
@@ -367,6 +442,11 @@ function discoverHandlers(): ProviderHandler[] {
         },
       });
     }
+  }
+
+  const geminiHandler = createGeminiHandler();
+  if (geminiHandler) {
+    handlers.push(geminiHandler);
   }
 
   const cfProvider = new CloudflareProvider();

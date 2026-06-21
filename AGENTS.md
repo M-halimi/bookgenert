@@ -7,7 +7,10 @@ Netflix-style reading app built with Next.js 14 App Router. Users search for boo
 - **Framework**: Next.js 14 (App Router, Server Components, API Routes)
 - **Styling**: Tailwind CSS v4 (CSS-first config, `@import "tailwindcss"`, no `tailwind.config.ts`)
 - **Client Interactivity**: React Client Components (`useState`, `useEffect`) — no Alpine.js
-- **AI**: Google Gemini API via `@google/generative-ai` (key in `GEMINI_API_KEY`)
+- **AI**: Multi-provider fallback chain: Groq → OpenRouter → **Gemini** → Cloudflare → HuggingFace → Ollama (local)
+  - Defined in `lib/ai/ai-router.ts` (`discoverHandlers()`)
+  - Uses REST API directly (not SDKs) for all providers
+  - Gemini key in `GEMINI_API_KEY`, sent via `:generateContent?key=...` query param
 - **Metadata**: Open Library API (free, no key)
 
 ## Project Structure
@@ -68,7 +71,8 @@ Prisma needs **two** connection strings with Supabase because PgBouncer can't ha
 |---|---|---|---|
 | `.env` | Yes | Build only (placeholder) | `postgresql://placeholder:placeholder@localhost:5432/placeholder` — enough for `prisma generate` |
 | `.env.local` | **No** (gitignored) | Local dev only | Real localhost `DATABASE_URL` + all API keys |
-| Vercel env vars | N/A | Production + Preview | Real Supabase `DATABASE_URL` + `DIRECT_URL` + all API keys |
+| `.env.example` | Yes | Reference only | Template with **correctly URL-encoded** Supabase URLs (password ` bookflix2003@` → `bookflix2003%40`) |
+| Vercel env vars | N/A | Production + Preview | Real Supabase `DATABASE_URL` + `DIRECT_URL` + `SHADOW_DATABASE_URL` + all API keys |
 
 ### First-time Supabase setup
 ```bash
@@ -90,13 +94,24 @@ In Vercel Dashboard → Project → Settings → Environment Variables, add:
 |---|---|---|---|
 | `DATABASE_URL` | Supabase pooled (port 6543) | Production, Preview | ✅ |
 | `DIRECT_URL` | Supabase direct (port 5432) | Production, Preview | ❌ (runtime only) |
+| `SHADOW_DATABASE_URL` | Supabase direct (port 5432) | Production, Preview | ❌ (runtime only) |
 | `GROQ_API_KEY` | `gsk_...` | Production, Preview | ✅ |
 | `CLOUDFLARE_API_TOKEN` | `cfut_...` | Production, Preview | ✅ |
 | `CLOUDFLARE_ACCOUNT_ID` | `...` | Production, Preview | ✅ |
+| `CLOUDFLARE_API_KEY` | Same as CLOUDFLARE_API_TOKEN | Production, Preview | ❌ (runtime only) |
 | `OPENROUTER_API_KEY` | `sk-or-...` | Production, Preview | ✅ |
+| `GEMINI_API_KEY` | `...` | Production, Preview | ✅ |
+| `HUGGINGFACE_API_KEY` | `hf_...` | Production, Preview | ✅ |
 | `API_SECRET_KEY` | (generated value) | Production, Preview | ✅ |
 
-> `DIRECT_URL` only needs to be available at runtime for Prisma Migrate commands run via Vercel CLI. It's not needed during `next build`.
+> `DIRECT_URL` and `SHADOW_DATABASE_URL` only need to be available at runtime for Prisma Migrate commands run via Vercel CLI. They're not needed during `next build`.
+>
+> ⚠️ **Critical**: The password `bookflix2003@` must be URL-encoded as `bookflix2003%40` in the DATABASE_URL. Do NOT use raw `@` in the password position — it will cause authentication failure. Example valid DATABASE_URL:
+> ```
+> postgresql://postgres:bookflix2003%40@db.pvpitwcpwzbbmmsmdtub.supabase.co:6543/postgres?pgbouncer=true&connection_limit=5
+> ```
+>
+> If you copy-paste from Supabase Dashboard URI mode, the password is already URL-encoded. Do not decode it.
 
 ### How it works at runtime
 ```
