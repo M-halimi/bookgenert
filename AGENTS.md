@@ -57,13 +57,26 @@ npx prisma studio             # Open DB browser
 
 ## Supabase + Vercel Deployment
 
-### Database connection (two URLs)
-Prisma needs **two** connection strings with Supabase because PgBouncer can't handle migrations:
+### ⚠️ CRITICAL: Supabase IPv4/IPv6 Issue
 
-| Variable | Port | Purpose | Example |
-|---|---|---|---|
-| `DATABASE_URL` | **6543** | Runtime queries (pooled via PgBouncer) | `postgresql://postgres:pass@db.xxx.supabase.co:6543/postgres?pgbouncer=true&connection_limit=5` |
-| `DIRECT_URL` | **5432** | Prisma Migrate (direct, bypasses PgBouncer) | `postgresql://postgres:pass@db.xxx.supabase.co:5432/postgres` |
+`db.xxx.supabase.co` resolves to **IPv6-only** (AAAA record, no A record). **Vercel uses IPv4-only for outbound connections.** This causes "Can't reach database server" errors.
+
+**Fix**: Use the Supabase Transaction Pooler hostname which has IPv4:
+```
+db.xxx.supabase.co:6543         → IPv6-ONLY ❌ Vercel cannot connect
+aws-REGION.pooler.supabase.com  → HAS IPv4 ✅ Vercel can connect
+```
+
+Find your pooler hostname: **Supabase Dashboard → Project Settings → Database → Connection string → Transaction pooler mode**
+
+### Database connection (two URLs)
+Prisma needs **two** connection strings with Supabase:
+
+| Variable | Port | Purpose | Hostname | Example |
+|---|---|---|---|---|
+| `DATABASE_URL` | **6543** | Runtime queries (transaction pooler) | `aws-REGION.pooler.supabase.com` | `postgresql://postgres:pass@aws-0-us-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=5` |
+| `DIRECT_URL` | **5432** | Prisma Migrate (session pooler, bypasses PgBouncer) | `aws-REGION.pooler.supabase.com` | `postgresql://postgres:pass@aws-0-us-west-1.pooler.supabase.com:5432/postgres` |
+| `SHADOW_DATABASE_URL` | **5432** | Prisma shadow DB (same as DIRECT_URL) | `aws-REGION.pooler.supabase.com` | Same as DIRECT_URL |
 
 ### File responsibilities
 
@@ -71,14 +84,14 @@ Prisma needs **two** connection strings with Supabase because PgBouncer can't ha
 |---|---|---|---|
 | `.env` | Yes | Build only (placeholder) | `postgresql://placeholder:placeholder@localhost:5432/placeholder` — enough for `prisma generate` |
 | `.env.local` | **No** (gitignored) | Local dev only | Real localhost `DATABASE_URL` + all API keys |
-| `.env.example` | Yes | Reference only | Template with **correctly URL-encoded** Supabase URLs (password ` bookflix2003@` → `bookflix2003%40`) |
+| `.env.example` | Yes | Reference only | Template with **correctly URL-encoded** Supabase URLs (password `bookflix2003@` → `bookflix2003%40`) using IPv4 pooler hostname |
 | Vercel env vars | N/A | Production + Preview | Real Supabase `DATABASE_URL` + `DIRECT_URL` + `SHADOW_DATABASE_URL` + all API keys |
 
 ### First-time Supabase setup
 ```bash
-# 1. Set your Supabase URLs temporarily
-$env:DATABASE_URL="postgresql://postgres:PASS@db.REF.supabase.co:6543/postgres?pgbouncer=true&connection_limit=5"
-$env:DIRECT_URL="postgresql://postgres:PASS@db.REF.supabase.co:5432/postgres"
+# 1. Set your Supabase URLs temporarily (using pooler for IPv4 compat)
+$env:DATABASE_URL="postgresql://postgres:PASS@aws-0-us-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=5"
+$env:DIRECT_URL="postgresql://postgres:PASS@aws-0-us-west-1.pooler.supabase.com:5432/postgres"
 
 # 2. Push schema to Supabase (creates all tables)
 npx prisma db push
@@ -108,7 +121,7 @@ In Vercel Dashboard → Project → Settings → Environment Variables, add:
 >
 > ⚠️ **Critical**: The password `bookflix2003@` must be URL-encoded as `bookflix2003%40` in the DATABASE_URL. Do NOT use raw `@` in the password position — it will cause authentication failure. Example valid DATABASE_URL:
 > ```
-> postgresql://postgres:bookflix2003%40@db.pvpitwcpwzbbmmsmdtub.supabase.co:6543/postgres?pgbouncer=true&connection_limit=5
+> postgresql://postgres:bookflix2003%40@aws-0-us-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=5
 > ```
 >
 > If you copy-paste from Supabase Dashboard URI mode, the password is already URL-encoded. Do not decode it.

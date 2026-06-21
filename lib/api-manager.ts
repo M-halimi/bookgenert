@@ -155,7 +155,7 @@ class ApiManager {
       });
     }
 
-    const cfKey = process.env.CLOUDFLARE_API_KEY;
+    const cfKey = process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_API_KEY;
     const cfAccount = process.env.CLOUDFLARE_ACCOUNT_ID;
     if (cfKey && cfAccount) {
       configs.push({
