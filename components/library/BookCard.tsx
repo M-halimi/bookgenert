@@ -10,6 +10,7 @@ export default function BookCard({
   coverUrl,
   tagline,
   moods,
+  lang = 'en',
 }: {
   slug: string;
   title: string;
@@ -18,12 +19,13 @@ export default function BookCard({
   coverUrl: string | null;
   tagline?: string;
   moods?: ScoredMood[];
+  lang?: string;
 }) {
   const displayMoods = (moods ?? []).filter(m => m.score > MOOD_SCORE_THRESHOLD);
 
   return (
     <Link
-      href={`/book/${slug}?title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}&cover=${encodeURIComponent(coverUrl || '')}`}
+      href={`/book/${slug}?title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}&cover=${encodeURIComponent(coverUrl || '')}&lang=${encodeURIComponent(lang)}`}
       className="group block"
     >
       <div className="aspect-[2/3] bg-zinc-800 rounded-lg overflow-hidden mb-3 relative">

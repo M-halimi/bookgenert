@@ -153,26 +153,21 @@ export async function saveGeneratedBook(
   const slug = slugify(title);
   const cacheKey = `book:${slug}:${slugify(author || '')}`;
 
-  function mtToString(mt: any): string | null {
-    if (!mt) return null;
-    if (typeof mt === 'string') return mt;
-    return mt.en || mt.ar || mt.fr || JSON.stringify(mt);
-  }
-
   const book = await prisma.book.upsert({
     where: { slug },
     update: {
       title,
-      description: data.description || null,
-      summary: mtToString(data.finalSummary),
+      description: typeof data.description === 'string' ? data.description : null,
       tagline: data.tagline?.en || null,
+      titleI18n: (data.title || { en: title }) as any,
+      descriptionI18n: (typeof data.description === 'string' ? { en: data.description } : null) as any,
+      taglineI18n: (data.tagline || null) as any,
       category: data.category || null,
       episodes: data as any,
-      finalSummary: mtToString(data.finalSummary),
       mainConcepts: (data.mainConcepts || null) as any,
       keyLessons: (data.keyLessons || null) as any,
       keyInsights: (data.keyInsights || null) as any,
-      implementationGuide: mtToString(data.implementationGuide),
+      implementationGuide: data.implementationGuide?.en || null,
       generationTimeMs: data.generationTimeMs || null,
       aiModelUsed: data.aiModelUsed || null,
       aiProvider: data.aiProvider || null,
@@ -182,16 +177,17 @@ export async function saveGeneratedBook(
     create: {
       slug,
       title,
-      description: data.description || null,
-      summary: mtToString(data.finalSummary),
+      description: typeof data.description === 'string' ? data.description : null,
       tagline: data.tagline?.en || null,
+      titleI18n: (data.title || { en: title }) as any,
+      descriptionI18n: (typeof data.description === 'string' ? { en: data.description } : null) as any,
+      taglineI18n: (data.tagline || null) as any,
       category: data.category || null,
       episodes: data as any,
-      finalSummary: mtToString(data.finalSummary),
       mainConcepts: (data.mainConcepts || null) as any,
       keyLessons: (data.keyLessons || null) as any,
       keyInsights: (data.keyInsights || null) as any,
-      implementationGuide: mtToString(data.implementationGuide),
+      implementationGuide: data.implementationGuide?.en || null,
       generationTimeMs: data.generationTimeMs || null,
       aiModelUsed: data.aiModelUsed || null,
       aiProvider: data.aiProvider || null,

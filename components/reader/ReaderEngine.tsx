@@ -1,38 +1,44 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import LangSwitcher from '@/components/ui/LangSwitcher';
 import type { RichChapter, LangCode } from '@/lib/groq';
+import { resolveField } from '@/lib/groq';
+import { useLang } from '@/lib/i18n/lang-context';
 
 interface ReaderEngineProps {
   episode: RichChapter;
   slug: string;
   totalEpisodes: number;
-  lang: LangCode;
 }
 
 export default function ReaderEngine({
   episode,
   slug,
   totalEpisodes,
-  lang,
 }: ReaderEngineProps) {
-  const [displayLang, setDisplayLang] = useState(lang);
   const [displayedText, setDisplayedText] = useState('');
   const [isComplete, setIsComplete] = useState(false);
+  const { lang: contextLang, setLang: setContextLang } = useLang();
   const router = useRouter();
   const indexRef = useRef(0);
 
-  const currentHook = episode.hook?.[displayLang] || '';
-  const currentContent = episode.content?.[displayLang] || '';
-  const currentTitle = episode.title?.[displayLang] || '';
-  const currentTakeaway = episode.keyTakeaway?.[displayLang] || '';
-  const currentCliffhanger = episode.cliffhanger?.[displayLang] || '';
-  const currentKeyIdeas = episode.keyIdeas?.[displayLang] || '';
-  const currentTips = episode.actionableTips?.[displayLang] || '';
-  const currentQuotes = episode.importantQuotes?.[displayLang] || '';
-  const currentExamples = episode.practicalExamples?.[displayLang] || '';
+  const displayLang = contextLang;
+
+  const handleLangChange = useCallback((newLang: LangCode) => {
+    setContextLang(newLang);
+  }, [setContextLang]);
+
+  const currentHook = resolveField(episode.hook, displayLang);
+  const currentContent = resolveField(episode.content, displayLang);
+  const currentTitle = resolveField(episode.title, displayLang);
+  const currentTakeaway = resolveField(episode.keyTakeaway, displayLang);
+  const currentCliffhanger = resolveField(episode.cliffhanger, displayLang);
+  const currentKeyIdeas = resolveField(episode.keyIdeas, displayLang);
+  const currentTips = resolveField(episode.actionableTips, displayLang);
+  const currentQuotes = resolveField(episode.importantQuotes, displayLang);
+  const currentExamples = resolveField(episode.practicalExamples, displayLang);
 
   const fullText = currentHook
     ? `${currentHook}\n\n${currentContent}`
@@ -72,19 +78,20 @@ export default function ReaderEngine({
   return (
     <div>
       <div className="mb-6">
-        <LangSwitcher value={displayLang} onChange={setDisplayLang} />
+        <LangSwitcher value={contextLang} onChange={handleLangChange} />
       </div>
 
       <div className="mb-8">
         <p className="text-zinc-400 text-sm mb-2">
           {displayLang === 'ar' ? `الفصل ${episode.number} من ${totalEpisodes}` :
            displayLang === 'fr' ? `Chapitre ${episode.number} sur ${totalEpisodes}` :
+           displayLang === 'de' ? `Kapitel ${episode.number} von ${totalEpisodes}` :
            `Chapter ${episode.number} of ${totalEpisodes}`}
         </p>
         <h1 className="text-2xl font-bold text-white">{currentTitle}</h1>
       </div>
 
-      <div className="prose prose-invert max-w-none mb-8">
+      <div className="prose prose-invert max-w-none mb-8" dir={displayLang === 'ar' ? 'rtl' : 'ltr'}>
         <div className="text-zinc-300 leading-relaxed whitespace-pre-line text-lg">
           {displayedText}
           {!isComplete && <span className="animate-pulse text-red-500">|</span>}
@@ -98,6 +105,7 @@ export default function ReaderEngine({
               <h3 className="text-purple-400 font-semibold mb-2">
                 {displayLang === 'ar' ? 'الأفكار الرئيسية' :
                  displayLang === 'fr' ? 'Idées clés' :
+                 displayLang === 'de' ? 'Schlüsselideen' :
                  'Key Ideas'}
               </h3>
               <p className="text-zinc-300 whitespace-pre-line">{currentKeyIdeas}</p>
@@ -109,6 +117,7 @@ export default function ReaderEngine({
               <h3 className="text-green-400 font-semibold mb-2">
                 {displayLang === 'ar' ? 'نصائح قابلة للتطبيق' :
                  displayLang === 'fr' ? 'Conseils actionnables' :
+                 displayLang === 'de' ? 'Umsetzbare Tipps' :
                  'Actionable Tips'}
               </h3>
               <p className="text-zinc-300 whitespace-pre-line">{currentTips}</p>
@@ -120,6 +129,7 @@ export default function ReaderEngine({
               <h3 className="text-yellow-400 font-semibold mb-2">
                 {displayLang === 'ar' ? 'أمثلة عملية' :
                  displayLang === 'fr' ? 'Exemples pratiques' :
+                 displayLang === 'de' ? 'Praktische Beispiele' :
                  'Practical Examples'}
               </h3>
               <p className="text-zinc-300 whitespace-pre-line">{currentExamples}</p>
@@ -131,6 +141,7 @@ export default function ReaderEngine({
               <h3 className="text-blue-400 font-semibold mb-2 not-italic">
                 {displayLang === 'ar' ? 'اقتباسات مهمة' :
                  displayLang === 'fr' ? 'Citations importantes' :
+                 displayLang === 'de' ? 'Wichtige Zitate' :
                  'Important Quotes'}
               </h3>
               <p className="text-zinc-300">{currentQuotes}</p>
@@ -142,6 +153,7 @@ export default function ReaderEngine({
               <h3 className="text-red-500 font-semibold mb-1">
                 {displayLang === 'ar' ? 'الخلاصة الرئيسية' :
                  displayLang === 'fr' ? 'Point clé' :
+                 displayLang === 'de' ? 'Wichtigste Erkenntnis' :
                  'Key Takeaway'}
               </h3>
               <p className="text-zinc-300">{currentTakeaway}</p>
@@ -154,7 +166,7 @@ export default function ReaderEngine({
             </div>
           )}
 
-          <div className="flex gap-4">
+          <div className="flex gap-4" dir="ltr">
             {episode.number < totalEpisodes && (
               <button
                 onClick={() => router.push(`/read/${slug}/${episode.number + 1}?lang=${displayLang}`)}
@@ -162,6 +174,7 @@ export default function ReaderEngine({
               >
                 {displayLang === 'ar' ? 'الفصل التالي' :
                  displayLang === 'fr' ? 'Chapitre suivant' :
+                 displayLang === 'de' ? 'Nächstes Kapitel' :
                  'Next Chapter'}
               </button>
             )}
@@ -172,6 +185,7 @@ export default function ReaderEngine({
               >
                 {displayLang === 'ar' ? 'اكتمل! العودة إلى الفصول' :
                  displayLang === 'fr' ? 'Terminé! Voir les chapitres' :
+                 displayLang === 'de' ? 'Abgeschlossen! Zu den Kapiteln' :
                  'Complete! Go to Chapters'}
               </button>
             )}
@@ -181,6 +195,7 @@ export default function ReaderEngine({
             >
               {displayLang === 'ar' ? 'قائمة الفصول' :
                displayLang === 'fr' ? 'Liste des chapitres' :
+               displayLang === 'de' ? 'Kapitelliste' :
                'Chapter List'}
             </button>
           </div>

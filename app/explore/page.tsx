@@ -8,6 +8,8 @@ import BookCard from '@/components/library/BookCard';
 import { fetchPopularBooks } from '@/lib/openlibrary';
 import { MOODS, type MoodId, type ScoredMood } from '@/lib/moods';
 import { getBooksByMood, isBackfillNeeded } from '@/lib/mood-store';
+import { useLocale, useTranslations } from 'next-intl';
+import { COOKIE_NAME } from '@/lib/i18n/config';
 
 interface LibraryBook {
   slug: string;
@@ -21,7 +23,15 @@ interface LibraryBook {
 
 type BrowseMode = 'categories' | 'moods';
 
+function getLangFromCookie(): string {
+  if (typeof document === 'undefined') return 'en';
+  const match = document.cookie.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : 'en';
+}
+
 function ExploreContent() {
+  const t = useTranslations();
+  const locale = useLocale();
   const searchParams = useSearchParams();
   const moodParam = searchParams.get('mood') as MoodId | null;
   const initialMood = moodParam && MOODS.some((m) => m.id === moodParam) ? moodParam : null;
@@ -43,10 +53,11 @@ function ExploreContent() {
 
       let dbBooks: LibraryBook[] = [];
       try {
-        const res = await fetch('/api/books/library?limit=100');
+        const lang = getLangFromCookie();
+        const res = await fetch(`/api/books/library?limit=100&lang=${lang}`);
         if (res.ok) {
           const data = await res.json();
-          dbBooks = (data.books || []).map((b: { slug: string; title: string; author: string; category: string; tagline: string; coverUrl: string | null }) => ({
+          dbBooks = (data.books || []).map((b: LibraryBook) => ({
             slug: b.slug,
             title: b.title,
             author: b.author || 'AI Generated',
@@ -145,8 +156,8 @@ function ExploreContent() {
   return (
     <main className="min-h-screen pt-24 pb-16 px-4">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-white mb-2">Explore</h1>
-        <p className="text-zinc-400 mb-8">Discover books by category or mood</p>
+        <h1 className="text-3xl font-bold text-white mb-2">{t('explore.title')}</h1>
+        <p className="text-zinc-400 mb-8">{t('explore.search_placeholder')}</p>
 
         <div className="flex gap-4 mb-6">
           <button
@@ -157,7 +168,7 @@ function ExploreContent() {
                 : 'bg-zinc-800 text-zinc-400 hover:text-white'
             }`}
           >
-            Categories
+            {t('explore.filter_all')}
           </button>
           <button
             onClick={() => { setBrowseMode('moods'); setActiveCategory('All'); }}
@@ -167,7 +178,7 @@ function ExploreContent() {
                 : 'bg-zinc-800 text-zinc-400 hover:text-white'
             }`}
           >
-            Moods
+            {t('common.search')}
           </button>
         </div>
 
@@ -187,25 +198,21 @@ function ExploreContent() {
 
         {loading ? (
           <div className="text-center py-20">
-            <p className="text-zinc-500">Loading books...</p>
+            <p className="text-zinc-500">{t('common.loading')}</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-zinc-500 text-lg mb-2">
-              {browseMode === 'moods'
-                ? 'No books match this mood'
-                : 'No books in this category'}
+              {t('explore.no_results')}
             </p>
             <p className="text-zinc-600">
-              {browseMode === 'moods'
-                ? 'Try a different mood or generate a new book'
-                : 'Try selecting a different category'}
+              {t('explore.no_results')}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
             {filtered.map((book) => (
-              <BookCard key={book.slug} {...book} />
+              <BookCard key={book.slug} {...book} lang={locale} />
             ))}
           </div>
         )}
@@ -219,7 +226,7 @@ export default function ExplorePage() {
     <Suspense fallback={
       <main className="min-h-screen pt-24 pb-16 px-4">
         <div className="max-w-6xl mx-auto text-center py-20">
-          <p className="text-zinc-500">Loading...</p>
+          <p className="text-zinc-500">{'common.loading'}</p>
         </div>
       </main>
     }>

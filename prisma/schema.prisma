@@ -43,6 +43,10 @@ model Book {
   description         String?
   summary             String?
   tagline             String?
+  titleI18n           Json?              @map("title_i18n")
+  descriptionI18n     Json?              @map("description_i18n")
+  summaryI18n         Json?              @map("summary_i18n")
+  taglineI18n         Json?              @map("tagline_i18n")
   coverImage          String?            @map("cover_image")
   coverPrompt         String?            @map("cover_prompt")
   category            String?
@@ -72,6 +76,7 @@ model Book {
   moods               BookMood[]
   bookSummary         BookSummary?
   author              Author?            @relation(fields: [authorId], references: [id])
+  translations        BookTranslation[]
   users               UserBook[]
   writingDrafts       UserWritingDraft[]
 
@@ -156,6 +161,25 @@ model BookCache {
   @@index([contentType])
   @@index([title])
   @@map("book_cache")
+}
+
+model BookTranslation {
+  id        String   @id @default(uuid()) @db.Uuid
+  bookId    String   @map("book_id") @db.Uuid
+  language  String   @db.VarChar(5)
+  title     String
+  author    String   @default("")
+  category  String   @default("General")
+  content   Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, language])
+  @@index([bookId])
+  @@index([language])
+  @@map("book_translations")
 }
 
 model BookGenerationJob {

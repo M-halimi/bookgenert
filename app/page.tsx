@@ -6,6 +6,8 @@ import SearchBar from '@/components/ui/SearchBar';
 import BookCard from '@/components/library/BookCard';
 import { MOODS, MOOD_SCORE_THRESHOLD, type MoodId, type ScoredMood } from '@/lib/moods';
 import { getBooksByMood, getMoodCounts, backfillFromLibrary, isBackfillNeeded } from '@/lib/mood-store';
+import { useLocale, useTranslations } from 'next-intl';
+import { COOKIE_NAME } from '@/lib/i18n/config';
 
 interface LibraryBook {
   slug: string;
@@ -17,7 +19,15 @@ interface LibraryBook {
   moods?: ScoredMood[];
 }
 
+function getLangFromCookie(): string {
+  if (typeof document === 'undefined') return 'en';
+  const match = document.cookie.match(new RegExp(`(?:^|; )${COOKIE_NAME}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : 'en';
+}
+
 export default function Home() {
+  const t = useTranslations();
+  const locale = useLocale();
   const [library, setLibrary] = useState<LibraryBook[]>([]);
   const [moodCounts, setMoodCounts] = useState<Record<string, number>>({});
   const [backfilled, setBackfilled] = useState(false);
@@ -25,10 +35,11 @@ export default function Home() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch('/api/books/library?limit=50');
+        const lang = getLangFromCookie();
+        const res = await fetch(`/api/books/library?limit=50&lang=${lang}`);
         if (res.ok) {
           const data = await res.json();
-          const dbBooks: LibraryBook[] = (data.books || []).map((b: { slug: string; title: string; author: string; category: string; tagline: string; coverUrl: string | null }) => ({
+          const dbBooks: LibraryBook[] = (data.books || []).map((b: LibraryBook) => ({
             slug: b.slug,
             title: b.title,
             author: b.author || 'AI Generated',
@@ -90,35 +101,34 @@ export default function Home() {
     return result;
   };
 
+  const hasContent = library.length > 0 || Object.values(moodCounts).some(c => c > 0);
+
   return (
     <main className="min-h-screen bg-zinc-950">
-      {/* Hero */}
       <section className="flex flex-col items-center justify-center px-4 pt-32 pb-16">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-white mb-4">
-            Read <span className="text-red-600">Smarter</span>
+            {t('home.hero_title')}
           </h1>
           <p className="text-xl text-zinc-400 max-w-md mx-auto">
-            Turn any book into 6 bite-sized episodes. Read in minutes, retain
-            for life.
+            {t('home.hero_subtitle')}
           </p>
         </div>
         <SearchBar />
       </section>
 
-      {/* Mood Discovery */}
-      {(library.length > 0 || Object.values(moodCounts).some(c => c > 0)) && (
+      {hasContent && (
         <section className="px-4 pb-16">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">
-                Discover by Mood
+                {t('home.popular_moods')}
               </h2>
               <Link
                 href="/explore"
                 className="text-sm text-zinc-400 hover:text-white transition-colors"
               >
-                Browse all
+                {t('home.start_reading')}
               </Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-12">
@@ -136,7 +146,7 @@ export default function Home() {
                     </h3>
                     <p className="text-xs text-zinc-500 mt-1">
                       {count > 0
-                        ? `${count} book${count !== 1 ? 's' : ''}`
+                        ? `${count} ${t('book.episodes')}`
                         : mood.description}
                     </p>
                   </Link>
@@ -144,7 +154,6 @@ export default function Home() {
               })}
             </div>
 
-            {/* Mood rows */}
             {MOODS.map((mood) => {
               const books = moodBooks(mood.id);
               if (books.length === 0) return null;
@@ -161,7 +170,7 @@ export default function Home() {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     {books.map((book) => (
-                      <BookCard key={book.slug} {...book} />
+                      <BookCard key={book.slug} {...book} lang={locale} />
                     ))}
                   </div>
                 </div>
@@ -171,20 +180,34 @@ export default function Home() {
         </section>
       )}
 
-      {/* Steps */}
+      {library.length > 0 && !hasContent && (
+        <section className="px-4 pb-24">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-2xl font-bold text-white mb-6">
+              {t('home.featured')}
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {library.slice(0, 10).map((book) => (
+                <BookCard key={book.slug} {...book} lang={locale} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="px-4 pb-24">
         <div className="max-w-lg mx-auto grid grid-cols-3 gap-8 text-center">
           <div>
-            <p className="text-2xl font-bold text-white">Search</p>
-            <p className="text-zinc-500 text-sm mt-1">Pick any book or topic</p>
+            <p className="text-2xl font-bold text-white">{t('common.search')}</p>
+            <p className="text-zinc-500 text-sm mt-1">{t('home.search_placeholder')}</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-white">Generate</p>
-            <p className="text-zinc-500 text-sm mt-1">AI creates 6 episodes</p>
+            <p className="text-2xl font-bold text-white">{t('home.generate_button')}</p>
+            <p className="text-zinc-500 text-sm mt-1">{t('home.hero_subtitle')}</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-white">Read</p>
-            <p className="text-zinc-500 text-sm mt-1">3-5 min per episode</p>
+            <p className="text-2xl font-bold text-white">{t('book.read')}</p>
+            <p className="text-zinc-500 text-sm mt-1">{t('home.start_reading')}</p>
           </div>
         </div>
       </section>

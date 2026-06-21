@@ -10,11 +10,42 @@ import {
 
 export type LangCode = 'ar' | 'fr' | 'en' | 'de';
 
+export const ALL_LANGS: LangCode[] = ['ar', 'fr', 'en', 'de'];
+
 export interface MultilingualText {
   ar: string;
   fr: string;
   en: string;
   de: string;
+}
+
+export function resolveField(
+  field: MultilingualText | string | null | undefined,
+  lang: LangCode,
+  fallbackLang: LangCode = 'en',
+): string {
+  if (!field) return '';
+  if (typeof field === 'string') return field;
+  if (field[lang]?.trim()) return field[lang];
+  if (field[fallbackLang]?.trim()) return field[fallbackLang];
+  for (const l of ALL_LANGS) {
+    if (field[l]?.trim()) return field[l];
+  }
+  return '';
+}
+
+export function emptyMultilingualText(): MultilingualText {
+  return { ar: '', fr: '', en: '', de: '' };
+}
+
+export function makeMultilingualText(
+  value: string,
+  forLang?: LangCode,
+): MultilingualText {
+  if (!forLang) return { ar: value, fr: value, en: value, de: value };
+  const result = emptyMultilingualText();
+  result[forLang] = value;
+  return result;
 }
 
 export interface RichChapter {

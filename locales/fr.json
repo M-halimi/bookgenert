@@ -1,0 +1,100 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "explore": "Explorer",
+    "write": "Écrire",
+    "analytics": "Analytiques",
+    "seed": "Amorcer"
+  },
+  "home": {
+    "hero_title": "Transformez les Livres en Aventures Concises",
+    "hero_subtitle": "L'IA transforme tout livre en 6 épisodes courts et captivants. Lisez mieux, pas plus.",
+    "search_placeholder": "Rechercher un titre ou un sujet...",
+    "generate_button": "Générer",
+    "popular_moods": "Ambiances Populaires",
+    "featured": "Livres en Vedette",
+    "start_reading": "Commencer la Lecture"
+  },
+  "explore": {
+    "title": "Explorer les Livres",
+    "search_placeholder": "Rechercher par titre, auteur ou mot-clé...",
+    "filter_all": "Tout",
+    "no_results": "Aucun livre trouvé",
+    "load_more": "Charger Plus",
+    "by_author": "par",
+    "episodes": "épisodes",
+    "generated": "Généré"
+  },
+  "book": {
+    "overview": "Aperçu",
+    "episodes": "Épisodes",
+    "summary": "Résumé",
+    "key_ideas": "Idées Clés",
+    "key_lessons": "Leçons Clés",
+    "key_insights": "Points de Vue",
+    "implementation_guide": "Guide de Mise en Œuvre",
+    "generated_by": "Généré par",
+    "read": "Lire",
+    "generate_similar": "Générer Similaire",
+    "loading": "Chargement du livre...",
+    "not_found": "Livre non trouvé",
+    "generate_title": "Générez Votre Propre Résumé",
+    "generate_placeholder": "Entrez un titre ou un sujet...",
+    "generate_button": "Générer les Épisodes",
+    "generating": "Génération en cours...",
+    "error": "Quelque chose s'est mal passé. Veuillez réessayer.",
+    "tags": "Étiquettes"
+  },
+  "reader": {
+    "previous": "Précédent",
+    "next": "Suivant",
+    "finish": "Terminer",
+    "episode": "Épisode",
+    "of": "sur",
+    "key_takeaway": "Point à Retenir",
+    "progress": "Progression de Lecture"
+  },
+  "write": {
+    "title": "Écrivez Votre Propre Livre",
+    "topic_placeholder": "Entrez un sujet...",
+    "generate_outline": "Générer le Plan",
+    "generating": "Génération...",
+    "error": "Échec de la génération. Veuillez réessayer."
+  },
+  "analytics": {
+    "title": "Analytiques",
+    "total_books": "Total des Livres",
+    "total_reads": "Total des Lectures",
+    "total_generations": "Total des Générations",
+    "popular_categories": "Catégories Populaires",
+    "recent_activity": "Activité Récente"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "retry": "Réessayer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "close": "Fermer",
+    "back": "Retour",
+    "search": "Rechercher",
+    "language": "Langue"
+  },
+  "seed": {
+    "title": "Amorcer la Base de Données",
+    "description": "Importer des livres depuis des sources externes pour peupler la base de données.",
+    "seed_button": "Amorcer",
+    "seeding": "Amorçage...",
+    "success": "Base de données amorcée avec succès",
+    "stats": "Statistiques de la Base de Données",
+    "books": "Livres",
+    "authors": "Auteurs",
+    "moods": "Ambiances"
+  },
+  "footer": {
+    "tagline": "Transformez tout livre en 6 épisodes courts et captivants. Lisez mieux, pas plus.",
+    "made_with": "Fait avec",
+    "by": "par BookFlix"
+  }
+}

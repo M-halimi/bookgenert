@@ -1,0 +1,100 @@
+{
+  "nav": {
+    "home": "الرئيسية",
+    "explore": "استكشف",
+    "write": "اكتب",
+    "analytics": "التحليلات",
+    "seed": "زرع البيانات"
+  },
+  "home": {
+    "hero_title": "حوّل الكتب إلى مغامرات صغيرة الحجم",
+    "hero_subtitle": "يحول الذكاء الاصطناعي أي كتاب إلى 6 حلقات قصيرة وجذابة. اقرأ بذكاء، ليس بصعوبة.",
+    "search_placeholder": "ابحث عن عنوان كتاب أو موضوع...",
+    "generate_button": "توليد",
+    "popular_moods": "المشاعر الشائعة",
+    "featured": "كتب مميزة",
+    "start_reading": "ابدأ القراءة"
+  },
+  "explore": {
+    "title": "استكشف الكتب",
+    "search_placeholder": "ابحث بالعنوان أو المؤلف أو الكلمة المفتاحية...",
+    "filter_all": "الكل",
+    "no_results": "لم يتم العثور على كتب",
+    "load_more": "تحميل المزيد",
+    "by_author": "بواسطة",
+    "episodes": "حلقات",
+    "generated": "مُولَّد"
+  },
+  "book": {
+    "overview": "نظرة عامة",
+    "episodes": "الحلقات",
+    "summary": "ملخص",
+    "key_ideas": "أفكار رئيسية",
+    "key_lessons": "دروس رئيسية",
+    "key_insights": "رؤى أساسية",
+    "implementation_guide": "دليل التطبيق",
+    "generated_by": "مُولَّد بواسطة",
+    "read": "اقرأ",
+    "generate_similar": "توليد مشابه",
+    "loading": "جاري تحميل الكتاب...",
+    "not_found": "الكتاب غير موجود",
+    "generate_title": "توليد ملخصك الخاص",
+    "generate_placeholder": "أدخل عنوان كتاب أو موضوع...",
+    "generate_button": "توليد الحلقات",
+    "generating": "جاري التوليد...",
+    "error": "حدث خطأ ما. حاول مرة أخرى.",
+    "tags": "وسوم"
+  },
+  "reader": {
+    "previous": "السابق",
+    "next": "التالي",
+    "finish": "إنهاء",
+    "episode": "الحلقة",
+    "of": "من",
+    "key_takeaway": "الخلاصة الرئيسية",
+    "progress": "تقدم القراءة"
+  },
+  "write": {
+    "title": "اكتب كتابك الخاص",
+    "topic_placeholder": "أدخل موضوعاً...",
+    "generate_outline": "توليد مخطط",
+    "generating": "جاري التوليد...",
+    "error": "فشل التوليد. حاول مرة أخرى."
+  },
+  "analytics": {
+    "title": "التحليلات",
+    "total_books": "إجمالي الكتب",
+    "total_reads": "إجمالي القراءات",
+    "total_generations": "إجمالي التوليدات",
+    "popular_categories": "الفئات الشائعة",
+    "recent_activity": "النشاط الأخير"
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "حدث خطأ",
+    "retry": "إعادة المحاولة",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "delete": "حذف",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "search": "بحث",
+    "language": "اللغة"
+  },
+  "seed": {
+    "title": "زرع قاعدة البيانات",
+    "description": "استيراد الكتب من مصادر خارجية لملء قاعدة البيانات.",
+    "seed_button": "ابدأ الزرع",
+    "seeding": "جاري الزرع...",
+    "success": "تم زرع قاعدة البيانات بنجاح",
+    "stats": "إحصائيات قاعدة البيانات",
+    "books": "الكتب",
+    "authors": "المؤلفون",
+    "moods": "المشاعر"
+  },
+  "footer": {
+    "tagline": "حوّل أي كتاب إلى 6 حلقات قصيرة وجذابة. اقرأ بذكاء، ليس بصعوبة.",
+    "made_with": "صُنع بـ",
+    "by": "بواسطة BookFlix"
+  }
+}

@@ -1,24 +1,16 @@
-import type { LangCode } from '@/lib/groq';
+'use client';
 
-const LANG_LABELS: Record<LangCode, string> = {
-  ar: 'العربية',
-  fr: 'Français',
-  en: 'English',
-  de: 'Deutsch',
-};
+import { LOCALES, LOCALE_LABELS, type Locale } from '@/lib/i18n/config';
 
-export default function LangSwitcher({
-  value,
-  onChange,
-}: {
-  value: LangCode;
-  onChange: (lang: LangCode) => void;
-}) {
-  const langs: LangCode[] = ['ar', 'fr', 'en', 'de'];
+interface Props {
+  value: Locale;
+  onChange: (lang: Locale) => void;
+}
 
+export default function LangSwitcher({ value, onChange }: Props) {
   return (
-    <div className="flex gap-1 bg-zinc-800 rounded-lg p-1 w-fit">
-      {langs.map((lang) => (
+    <div className="flex gap-1 bg-zinc-800 rounded-lg p-1 w-fit" dir="ltr">
+      {LOCALES.map((lang) => (
         <button
           key={lang}
           onClick={() => onChange(lang)}
@@ -27,8 +19,9 @@ export default function LangSwitcher({
               ? 'bg-red-600 text-white'
               : 'text-zinc-400 hover:text-white'
           }`}
+          aria-label={`Switch to ${LOCALE_LABELS[lang]}`}
         >
-          {LANG_LABELS[lang]}
+          {LOCALE_LABELS[lang]}
         </button>
       ))}
     </div>

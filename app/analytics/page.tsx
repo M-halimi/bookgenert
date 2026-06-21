@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 
 interface SavedBook {
   id: string;
@@ -44,6 +45,7 @@ interface DashboardStats {
 export default function AnalyticsPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [savedBooks, setSavedBooks] = useState<SavedBook[]>([]);
+  const locale = useLocale();
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'analytics' | 'saved'>('saved');
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | 'all'>('30d');
@@ -171,7 +173,7 @@ export default function AnalyticsPage() {
                 {savedBooks.map((book) => (
                   <Link
                     key={book.id}
-                    href={`/book/${book.slug}`}
+                    href={`/book/${book.slug}?lang=${locale}`}
                     className="flex items-center gap-4 p-4 bg-zinc-800/30 border border-zinc-800 rounded-xl hover:bg-zinc-800/60 hover:border-zinc-600 transition-all group"
                   >
                     <div className="w-12 h-12 rounded-lg bg-red-600/20 flex items-center justify-center flex-shrink-0">
@@ -323,7 +325,7 @@ export default function AnalyticsPage() {
                     {stats.topBooks.map((book, i) => (
                       <Link
                         key={i}
-                        href={`/book/${book.slug}`}
+                        href={`/book/${book.slug}?lang=${locale}`}
                         className="flex items-center justify-between group rounded-lg hover:bg-zinc-700/30 px-2 py-1 -mx-2 transition-colors"
                       >
                         <div className="flex items-center gap-3">
@@ -359,7 +361,7 @@ export default function AnalyticsPage() {
                         </span>
                         {event.book && (
                           <Link
-                            href={`/book/${event.bookSlug || event.book.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 100)}`}
+                            href={`/book/${event.bookSlug || event.book.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 100)}?lang=${locale}`}
                             className="text-zinc-400 text-sm truncate hover:text-red-400 transition-colors"
                           >
                             — {event.book}

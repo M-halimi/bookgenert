@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { slugify } from '@/lib/utils';
 
 interface SearchBook {
@@ -24,6 +25,7 @@ export default function SearchBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const locale = useLocale();
   const debounceRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
@@ -58,6 +60,7 @@ export default function SearchBar() {
       title: book.title,
       author: book.author,
       cover: book.coverUrl || '',
+      lang: locale,
     });
     router.push(`/book/${slug}?${params}`);
   };
@@ -97,7 +100,7 @@ export default function SearchBar() {
               <button
                 key={book.id}
                 onClick={() => handleSelect(book)}
-                className="w-full flex items-center gap-4 p-4 hover:bg-zinc-800 transition-colors text-left"
+                className={`w-full flex items-center gap-4 p-4 hover:bg-zinc-800 transition-colors ${lang === 'ar' ? 'text-right' : 'text-left'}`}
                 dir={lang === 'ar' ? 'rtl' : 'ltr'}
               >
                 {book.coverUrl ? (

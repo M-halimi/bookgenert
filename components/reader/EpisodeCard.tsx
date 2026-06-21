@@ -1,13 +1,17 @@
+import type { LangCode } from '@/lib/groq';
+
 export default function EpisodeCard({
   number,
   title,
   status,
   subtitle,
+  lang = 'en',
 }: {
   number: number;
   title: string;
   status: 'locked' | 'current' | 'done';
   subtitle?: string;
+  lang?: LangCode;
 }) {
   const statusStyles = {
     locked: 'border-zinc-800 opacity-50',
@@ -71,7 +75,12 @@ export default function EpisodeCard({
         {number}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-zinc-500">Chapter {number}</p>
+        <p className="text-sm text-zinc-500">
+          {lang === 'ar' ? `الفصل ${number}` :
+           lang === 'fr' ? `Chapitre ${number}` :
+           lang === 'de' ? `Kapitel ${number}` :
+           `Chapter ${number}`}
+        </p>
         <p
           className={`font-medium truncate ${
             status === 'locked' ? 'text-zinc-600' : 'text-white'

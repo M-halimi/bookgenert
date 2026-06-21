@@ -1,0 +1,100 @@
+{
+  "nav": {
+    "home": "Startseite",
+    "explore": "Entdecken",
+    "write": "Schreiben",
+    "analytics": "Analysen",
+    "seed": "Befüllen"
+  },
+  "home": {
+    "hero_title": "Verwandle Bücher in Häppchen-Abenteuer",
+    "hero_subtitle": "KI verwandelt jedes Buch in 6 kurze, fesselnde Episoden. Lesen Sie klüger, nicht härter.",
+    "search_placeholder": "Suche nach einem Buchtitel oder Thema...",
+    "generate_button": "Generieren",
+    "popular_moods": "Beliebte Stimmungen",
+    "featured": "Vorgestellte Bücher",
+    "start_reading": "Lesen beginnen"
+  },
+  "explore": {
+    "title": "Bücher entdecken",
+    "search_placeholder": "Suche nach Titel, Autor oder Schlüsselwort...",
+    "filter_all": "Alle",
+    "no_results": "Keine Bücher gefunden",
+    "load_more": "Mehr laden",
+    "by_author": "von",
+    "episodes": "Episoden",
+    "generated": "Generiert"
+  },
+  "book": {
+    "overview": "Übersicht",
+    "episodes": "Episoden",
+    "summary": "Zusammenfassung",
+    "key_ideas": "Schlüsselideen",
+    "key_lessons": "Wichtige Lektionen",
+    "key_insights": "Wichtige Erkenntnisse",
+    "implementation_guide": "Umsetzungsleitfaden",
+    "generated_by": "Generiert von",
+    "read": "Lesen",
+    "generate_similar": "Ähnliches generieren",
+    "loading": "Buch wird geladen...",
+    "not_found": "Buch nicht gefunden",
+    "generate_title": "Eigene Zusammenfassung generieren",
+    "generate_placeholder": "Geben Sie einen Buchtitel oder ein Thema ein...",
+    "generate_button": "Episoden generieren",
+    "generating": "Generiere...",
+    "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "tags": "Schlagwörter"
+  },
+  "reader": {
+    "previous": "Zurück",
+    "next": "Weiter",
+    "finish": "Beenden",
+    "episode": "Episode",
+    "of": "von",
+    "key_takeaway": "Wichtigste Erkenntnis",
+    "progress": "Lesefortschritt"
+  },
+  "write": {
+    "title": "Schreiben Sie Ihr eigenes Buch",
+    "topic_placeholder": "Geben Sie ein Thema ein...",
+    "generate_outline": "Gliederung generieren",
+    "generating": "Generiere...",
+    "error": "Generierung fehlgeschlagen. Bitte versuchen Sie es erneut."
+  },
+  "analytics": {
+    "title": "Analysen",
+    "total_books": "Gesamt Bücher",
+    "total_reads": "Gesamt Lesevorgänge",
+    "total_generations": "Gesamt Generierungen",
+    "popular_categories": "Beliebte Kategorien",
+    "recent_activity": "Letzte Aktivität"
+  },
+  "common": {
+    "loading": "Laden...",
+    "error": "Ein Fehler ist aufgetreten",
+    "retry": "Wiederholen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "close": "Schließen",
+    "back": "Zurück",
+    "search": "Suchen",
+    "language": "Sprache"
+  },
+  "seed": {
+    "title": "Datenbank befüllen",
+    "description": "Importieren Sie Bücher aus externen Quellen, um die Datenbank zu füllen.",
+    "seed_button": "Jetzt befüllen",
+    "seeding": "Befülle...",
+    "success": "Datenbank erfolgreich befüllt",
+    "stats": "Datenbank-Statistiken",
+    "books": "Bücher",
+    "authors": "Autoren",
+    "moods": "Stimmungen"
+  },
+  "footer": {
+    "tagline": "Verwandeln Sie jedes Buch in 6 kurze, fesselnde Episoden. Lesen Sie klüger, nicht härter.",
+    "made_with": "Gemacht mit",
+    "by": "von BookFlix"
+  }
+}

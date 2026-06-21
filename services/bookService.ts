@@ -6,6 +6,16 @@ import { findExactOrSimilarBook, saveBookEmbedding } from '@/lib/embeddings';
 import type { BookEpisodes } from '@/lib/groq';
 import type { Prisma } from '@prisma/client';
 
+function resolveI18n(
+  str: string | null | undefined,
+  i18n: Record<string, string> | null | undefined,
+  lang?: string,
+): string | null {
+  if (lang && i18n && i18n[lang]?.trim()) return i18n[lang];
+  if (i18n?.en) return i18n.en;
+  return str ?? null;
+}
+
 export type BookWithRelations = Prisma.BookGetPayload<{
   include: {
     author: true;
@@ -195,8 +205,9 @@ export async function getLibrary(options: {
   category?: string;
   limit?: number;
   offset?: number;
+  lang?: string;
 }) {
-  const { category, limit = 50, offset = 0 } = options;
+  const { category, limit = 50, offset = 0, lang } = options;
 
   const where: Prisma.BookWhereInput = {
     generationStatus: 'completed',
@@ -212,6 +223,9 @@ export async function getLibrary(options: {
         title: true,
         description: true,
         tagline: true,
+        titleI18n: true,
+        descriptionI18n: true,
+        taglineI18n: true,
         coverImage: true,
         category: true,
         language: true,
@@ -231,9 +245,9 @@ export async function getLibrary(options: {
   const mapped = books.map((b) => ({
     id: b.id,
     slug: b.slug,
-    title: b.title,
-    description: b.description,
-    tagline: b.tagline,
+    title: resolveI18n(b.title, b.titleI18n as Record<string, string> | null, lang) || b.title,
+    description: resolveI18n(b.description, b.descriptionI18n as Record<string, string> | null, lang),
+    tagline: resolveI18n(b.tagline, b.taglineI18n as Record<string, string> | null, lang),
     coverUrl: b.coverImage,
     category: b.category,
     language: b.language,
@@ -457,6 +471,27 @@ export async function generateAndSave(
 
 export async function findSimilar(title: string) {
   return findExactOrSimilarBook(title);
+}
+
+export async function getBookTranslation(bookId: string, language: string) {
+  return prisma.bookTranslation.findUnique({
+    where: { bookId_language: { bookId, language } },
+  });
+}
+
+export async function upsertBookTranslation(
+  bookId: string,
+  language: string,
+  title: string,
+  author: string,
+  category: string,
+  content: unknown,
+) {
+  return prisma.bookTranslation.upsert({
+    where: { bookId_language: { bookId, language } },
+    create: { bookId, language, title, author, category, content: content as Prisma.InputJsonValue },
+    update: { title, author, category, content: content as Prisma.InputJsonValue, updatedAt: new Date() },
+  });
 }
 
 export {

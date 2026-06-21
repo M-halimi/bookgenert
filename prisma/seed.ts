@@ -67,7 +67,7 @@ async function seedStatic() {
     const book = await prisma.book.create({
       data: {
         slug: entry.slug,
-        title: entry.title,
+        title: { en: entry.title, fr: '', ar: '', de: '' } as any,
         source: 'manual',
         moodAnalyzed: true,
       },

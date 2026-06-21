@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import type { BookEpisodes, LangCode } from '@/lib/groq';
 
 type WritingStyle = 'Conversational' | 'Academic' | 'Professional' | 'Creative' | 'Simple';
@@ -22,6 +23,7 @@ interface GenerationProgress {
 
 export default function WritePage() {
   const router = useRouter();
+  const locale = useLocale();
   const [topic, setTopic] = useState('');
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
@@ -144,7 +146,7 @@ export default function WritePage() {
         ?.toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '') || title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      router.push(`/book/${slug}?title=${encodeURIComponent(title)}&author=${encodeURIComponent(result.author || 'AI Generated')}`);
+      router.push(`/book/${slug}?title=${encodeURIComponent(title)}&author=${encodeURIComponent(result.author || 'AI Generated')}&lang=${encodeURIComponent(locale)}`);
     }
   }
 
