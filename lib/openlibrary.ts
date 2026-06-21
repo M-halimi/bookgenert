@@ -18,36 +18,50 @@ export interface BookMetadata {
 }
 
 export async function searchBooks(query: string): Promise<BookMetadata[]> {
-  const res = await fetch(
-    `${OPEN_LIBRARY_BASE}/search.json?q=${encodeURIComponent(query)}&limit=10`
-  );
-  const data = await res.json();
+  try {
+    const res = await fetch(
+      `${OPEN_LIBRARY_BASE}/search.json?q=${encodeURIComponent(query)}&limit=10`
+    );
+    if (!res.ok) {
+      console.error('[OpenLibrary] searchBooks returned', res.status);
+      return [];
+    }
+    const data = await res.json();
     return (data.docs || []).map((book: OpenLibraryBook) => ({
-    id: book.key.replace('/works/', ''),
-    title: book.title,
-    author: book.author_name?.[0] || 'Unknown Author',
-    coverUrl: book.cover_i
-      ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
-      : null,
-    publishYear: book.first_publish_year || null,
-    source: 'openlibrary',
-  }));
+      id: book.key.replace('/works/', ''),
+      title: book.title,
+      author: book.author_name?.[0] || 'Unknown Author',
+      coverUrl: book.cover_i
+        ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
+        : null,
+      publishYear: book.first_publish_year || null,
+      source: 'openlibrary',
+    }));
+  } catch (err) {
+    console.error('[OpenLibrary] searchBooks failed:', err);
+    return [];
+  }
 }
 
 export async function getBookDetails(workId: string): Promise<BookMetadata | null> {
-  const res = await fetch(`${OPEN_LIBRARY_BASE}/works/${workId}.json`);
-  if (!res.ok) return null;
-  const data = await res.json();
-  return {
-    id: workId,
-    title: data.title,
-    author: data.authors?.[0]?.author?.name || 'Unknown Author',
-    coverUrl: data.covers?.[0]
-      ? `https://covers.openlibrary.org/b/id/${data.covers[0]}-M.jpg`
-      : null,
+  try {
+    const res = await fetch(`${OPEN_LIBRARY_BASE}/works/${workId}.json`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return {
+      id: workId,
+      title: data.title,
+      author: data.authors?.[0]?.author?.name || 'Unknown Author',
+      coverUrl: data.covers?.[0]
+        ? `https://covers.openlibrary.org/b/id/${data.covers[0]}-M.jpg`
+        : null,
     publishYear: data.first_publish_year || null,
     source: 'openlibrary',
-  };
+    };
+  } catch (err) {
+    console.error('[OpenLibrary] getBookDetails failed:', err);
+    return null;
+  }
 }
 
 const CATEGORY_SUBJECTS: Record<string, string> = {
@@ -95,7 +109,9 @@ export async function fetchPopularBooks(): Promise<PopularBook[]> {
           publishYear: work.first_publish_year || null,
         });
       }
-    } catch {}
+    } catch (err) {
+      console.error(`[OpenLibrary] Failed to fetch category "${category}":`, err);
+    }
   }
   return results;
 }

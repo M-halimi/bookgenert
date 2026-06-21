@@ -1,13 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import ReaderEngine from '@/components/reader/ReaderEngine';
 import type { BookEpisodes, LangCode, MultilingualText } from '@/lib/groq';
 
 const TOTAL_EPISODES = 10;
 
-export default function ReadPage() {
+export default function ReadPageWrapper() {
+  return (
+    <Suspense fallback={<div className="min-h-screen pt-24 pb-16 px-4"><div className="max-w-2xl mx-auto animate-pulse h-8 bg-zinc-800 rounded w-3/4" /></div>}>
+      <ReadPage />
+    </Suspense>
+  );
+}
+
+function ReadPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -35,7 +43,9 @@ export default function ReadPage() {
             return;
           }
         }
-      } catch {}
+      } catch (err) {
+        console.error('[ReadPage] Failed to parse localStorage cache:', err);
+      }
 
       try {
         const res = await fetch(`/api/books/content?slug=${slug}`);
@@ -76,10 +86,12 @@ export default function ReadPage() {
                   }))
                 : json.episodes?.episodes || [],
             };
-            setData(bookData);
+            if (!cancelled) setData(bookData);
           }
         }
-      } catch {}
+      } catch (err) {
+        console.error('[ReadPage] Failed to fetch book content:', err);
+      }
 
       if (!cancelled) setLoading(false);
     }

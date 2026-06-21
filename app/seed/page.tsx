@@ -38,8 +38,14 @@ export default function SeedPage() {
       setStep('Storing books in library...');
       setResult(data);
 
-      const library = JSON.parse(localStorage.getItem('bookflix_library') || '[]');
-      const existingSlugs = new Set(library.map((b: Record<string, unknown>) => b.slug));
+      let library: Record<string, unknown>[] = [];
+      try {
+        library = JSON.parse(localStorage.getItem('bookflix_library') || '[]');
+      } catch (err) {
+        console.error('[Seed] Failed to parse library cache:', err);
+        library = [];
+      }
+      const existingSlugs = new Set(library.map((b) => b.slug));
 
       let added = 0;
       for (const book of data.books) {

@@ -31,7 +31,9 @@ function getStore(): MoodStore {
       const store = JSON.parse(raw) as MoodStore;
       if (store.version === 2) return store;
     }
-  } catch {}
+  } catch (err) {
+    console.error('[MoodStore] Failed to read mood store:', err);
+  }
   return emptyStore();
 }
 
@@ -40,7 +42,9 @@ function saveStore(store: MoodStore): void {
   store.updatedAt = Date.now();
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-  } catch {}
+  } catch (err) {
+    console.error('[MoodStore] Failed to save mood store:', err);
+  }
 }
 
 export function getBooksByMood(moodId: MoodId): MoodStoreEntry[] {

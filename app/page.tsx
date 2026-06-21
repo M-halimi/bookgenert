@@ -51,7 +51,9 @@ export default function Home() {
           setMoodCounts(getMoodCounts() as unknown as Record<string, number>);
           setBackfilled(true);
         }
-      } catch {}
+      } catch (err) {
+        console.error('[Home] Failed to load library:', err);
+      }
     }
     load();
   }, [backfilled]);

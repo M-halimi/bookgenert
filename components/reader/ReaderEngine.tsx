@@ -25,10 +25,10 @@ export default function ReaderEngine({
   const indexRef = useRef(0);
 
   const currentHook = episode.hook?.[displayLang] || '';
-  const currentContent = episode.content[displayLang];
-  const currentTitle = episode.title[displayLang];
-  const currentTakeaway = episode.keyTakeaway[displayLang];
-  const currentCliffhanger = episode.cliffhanger[displayLang];
+  const currentContent = episode.content?.[displayLang] || '';
+  const currentTitle = episode.title?.[displayLang] || '';
+  const currentTakeaway = episode.keyTakeaway?.[displayLang] || '';
+  const currentCliffhanger = episode.cliffhanger?.[displayLang] || '';
   const currentKeyIdeas = episode.keyIdeas?.[displayLang] || '';
   const currentTips = episode.actionableTips?.[displayLang] || '';
   const currentQuotes = episode.importantQuotes?.[displayLang] || '';
@@ -63,7 +63,9 @@ export default function ReaderEngine({
         const saved = JSON.parse(localStorage.getItem(key) || '{}');
         saved[slug] = Math.max(saved[slug] || 0, episode.number);
         localStorage.setItem(key, JSON.stringify(saved));
-      } catch {}
+      } catch (err) {
+        console.error('[ReaderEngine] Failed to save progress:', err);
+      }
     }
   }, [isComplete, slug, episode.number]);
 

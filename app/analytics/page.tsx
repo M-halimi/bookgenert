@@ -64,7 +64,9 @@ export default function AnalyticsPage() {
         const data = await res.json();
         setStats(data);
       }
-    } catch {}
+    } catch (err) {
+      console.error('[Analytics] Failed to fetch stats:', err);
+    }
   }
 
   async function fetchSavedBooks() {
@@ -74,7 +76,9 @@ export default function AnalyticsPage() {
         const data = await res.json();
         setSavedBooks(data.books || []);
       }
-    } catch {}
+    } catch (err) {
+      console.error('[Analytics] Failed to fetch saved books:', err);
+    }
   }
 
   function formatTime(ms: number): string {

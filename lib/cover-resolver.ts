@@ -17,7 +17,9 @@ function saveCache(cache: CoverCache): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-  } catch {}
+  } catch (err) {
+    console.error('[CoverResolver] Failed to save cover cache:', err);
+  }
 }
 
 export function getCachedCover(slug: string): string | null | undefined {

@@ -4,6 +4,14 @@
     "app/api/seed/books/route.ts": { "maxDuration": 120 },
     "app/api/generate/route.ts": { "maxDuration": 300 },
     "app/api/write/route.ts": { "maxDuration": 300 },
-    "app/api/books/search/route.ts": { "maxDuration": 30 }
+    "app/api/books/search/route.ts": { "maxDuration": 30 },
+    "app/api/search/route.ts": { "maxDuration": 30 },
+    "app/api/moods/tag/route.ts": { "maxDuration": 60 },
+    "app/api/moods/classify/route.ts": { "maxDuration": 60 },
+    "app/api/moods/backfill/route.ts": { "maxDuration": 120 },
+    "app/api/analytics/stats/route.ts": { "maxDuration": 30 },
+    "app/api/books/content/route.ts": { "maxDuration": 30 },
+    "app/api/books/library/route.ts": { "maxDuration": 30 },
+    "app/api/user/reading-progress/route.ts": { "maxDuration": 30 }
   }
 }

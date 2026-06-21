@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import EpisodeCard from '@/components/reader/EpisodeCard';
@@ -12,7 +12,15 @@ import { assignMoods, classifyBook } from '@/lib/mood-store';
 
 const TOTAL_EPISODES = 10;
 
-export default function BookPage() {
+export default function BookPageWrapper() {
+  return (
+    <Suspense fallback={<div className="min-h-screen pt-24 pb-16 px-4"><div className="max-w-2xl mx-auto animate-pulse h-8 bg-zinc-800 rounded w-3/4" /></div>}>
+      <BookPage />
+    </Suspense>
+  );
+}
+
+function BookPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const slug = params.slug as string;
@@ -39,7 +47,9 @@ export default function BookPage() {
     try {
       const savedProgress = localStorage.getItem('bookflix_progress');
       if (savedProgress) setProgress(JSON.parse(savedProgress));
-    } catch {}
+    } catch (err) {
+      console.error('[BookPage] Failed to parse localStorage progress:', err);
+    }
   }, []);
 
   useEffect(() => {
@@ -85,7 +95,9 @@ export default function BookPage() {
           };
           setData(bookData);
         }
-      } catch {}
+      } catch (err) {
+        console.error('[BookPage] Failed to load book from DB:', err);
+      }
     };
     loadFromDb();
   }, [slug]);

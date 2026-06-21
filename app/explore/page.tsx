@@ -55,7 +55,9 @@ function ExploreContent() {
             coverUrl: b.coverUrl || null,
           }));
         }
-      } catch {}
+      } catch (err) {
+        console.error('[Explore] Failed to load DB books:', err);
+      }
 
       try {
         const popular = await fetchPopularBooks();
