@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBookBySlug, getBookById } from '@/lib/db/books';
+import { getBookByIdOrSlug } from '@/services/bookService';
 import { getCachedData, setCachedData, cacheKeyFor } from '@/lib/db/cache';
 import { getBookDetails } from '@/lib/openlibrary';
 
@@ -13,17 +13,12 @@ export async function GET(
     return NextResponse.json({ error: 'Book ID is required' }, { status: 400 });
   }
 
-  // 1. Try database by slug first, then by UUID
-  let book = await getBookBySlug(id);
-  if (!book) {
-    book = await getBookById(id);
-  }
+  const book = await getBookByIdOrSlug(id);
 
   if (book) {
     return NextResponse.json({ source: 'database', book });
   }
 
-  // 2. Fallback to external API
   const cacheKey = cacheKeyFor('book-detail', id);
   const cached = await getCachedData<{ source: string }>(cacheKey);
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getBookContent } from '@/services/bookService';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -10,59 +10,16 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const book = await prisma.book.findUnique({
-      where: { slug },
-      include: {
-        chapters: { orderBy: { chapterNumber: 'asc' } },
-        bookSummary: true,
-        embedding: true,
-        author: { select: { name: true } },
-      },
-    });
+    const book = await getBookContent(slug);
 
     if (!book) {
       return NextResponse.json({ error: 'Book not found' }, { status: 404 });
     }
 
-    const episodes = book.episodes as Record<string, unknown> | null;
-
-    return NextResponse.json({
-      id: book.id,
-      slug: book.slug,
-      title: book.title,
-      description: book.description,
-      tagline: book.tagline,
-      coverImage: book.coverImage,
-      coverPrompt: book.coverPrompt,
-      category: book.category,
-      author: book.author?.name || 'AI Generated',
-      episodes,
-      chapters: book.chapters.map((ch) => ({
-        number: ch.chapterNumber,
-        title: ch.title,
-        content: ch.content,
-        hook: ch.hook,
-        keyTakeaway: ch.keyTakeaway,
-        keyIdeas: ch.keyIdeas,
-        actionableTips: ch.actionableTips,
-        importantQuotes: ch.importantQuotes,
-        practicalExamples: ch.practicalExamples,
-        cliffhanger: ch.cliffhanger,
-        summary: ch.summary,
-        wordCount: ch.wordCount,
-      })),
-      finalSummary: book.finalSummary,
-      mainConcepts: book.mainConcepts,
-      keyLessons: book.keyLessons,
-      keyInsights: book.keyInsights,
-      implementationGuide: book.implementationGuide,
-      summary: book.bookSummary,
-      generationStatus: book.generationStatus,
-      createdAt: book.createdAt.toISOString(),
-    });
+    return NextResponse.json(book);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const isDbError = message.includes('Can\'t reach database') ||
+    const isDbError = message.includes("Can't reach database") ||
       message.includes('Authentication') ||
       message.includes('connect ECONNREFUSED') ||
       message.includes('getaddrinfo') ||

@@ -42,3 +42,6 @@ next-env.d.ts
 .env.test.local
 .env.production.local
 !.env.example
+
+# database export / import
+prisma/yield-export.json

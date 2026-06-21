@@ -2,6 +2,9 @@
   "name": "bookflix",
   "version": "0.1.0",
   "private": true,
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "npx prisma generate && next build",
@@ -13,6 +16,8 @@
     "db:migrate:prod": "npx prisma migrate deploy",
     "db:seed": "npx prisma db seed",
     "db:studio": "npx prisma studio",
+    "db:export": "node prisma/yield-export.mjs",
+    "db:import": "node prisma/yield-import.mjs",
     "postinstall": "npx prisma generate"
   },
   "dependencies": {

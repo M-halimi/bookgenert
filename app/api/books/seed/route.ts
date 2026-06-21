@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { seedBookFromExternal } from '@/lib/db/books';
+import { seedBookFromExternal } from '@/services/bookService';
 import { syncMoodsToDb } from '@/lib/db/moods';
 import { fetchSeedBooks } from '@/lib/seed/fetcher';
 import { validateApiKey, unauthorizedResponse } from '@/lib/auth';
@@ -30,8 +30,7 @@ export async function POST(request: NextRequest) {
     let skipped = 0;
 
     for (const sBook of seedResult.books) {
-      const slug = sBook.id;
-      const existing = await prisma.book.findUnique({ where: { slug } });
+      const existing = await prisma.book.findUnique({ where: { slug: sBook.id } });
       if (existing) {
         skipped++;
         continue;
@@ -44,8 +43,8 @@ export async function POST(request: NextRequest) {
         coverUrl: sBook.coverUrl,
         category: sBook.category,
         source: sBook.source,
-        externalId: slug,
-        slug,
+        externalId: sBook.id,
+        slug: sBook.id,
         publishYear: sBook.publishYear,
         pageCount: sBook.pageCount,
         language: sBook.language,

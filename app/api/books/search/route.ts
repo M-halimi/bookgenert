@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { searchBooks } from '@/lib/db/books';
+import { searchBooks, upsertBook } from '@/services/bookService';
 import { getCachedData, setCachedData, cacheKeyFor } from '@/lib/db/cache';
 import { searchBooks as searchOpenLibrary } from '@/lib/openlibrary';
 import { searchGoogleBooks } from '@/lib/googlebooks';
+import { slugify } from '@/lib/utils';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -20,14 +20,11 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // 1. Check cache for external results
   const cacheKey = cacheKeyFor('search', `${q}:${category ?? ''}:${moodId ?? ''}`);
   const cached = await getCachedData<{ source: string; total: number }>(cacheKey);
 
-  // 2. Search database first
   const dbResults = await searchBooks(q, { category, moodId, limit, offset });
 
-  // 3. If DB has enough results, return them
   if (dbResults.total >= limit) {
     return NextResponse.json({
       source: 'database',
@@ -39,7 +36,6 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // 4. Fallback to external APIs if not enough results
   const needed = limit - dbResults.books.length;
   try {
     const [openLibBooks, googleBooks] = await Promise.all([
@@ -51,21 +47,14 @@ export async function GET(request: NextRequest) {
       .slice(0, needed)
       .filter((b) => !dbResults.books.some((db) => db.title.toLowerCase() === b.title.toLowerCase()));
 
-    // Store new books in database
     let storedCount = 0;
     for (const ext of externalBooks) {
-      const slug = ext.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '')
-        .slice(0, 100);
-
-      const existing = await prisma.book.findUnique({ where: { slug } });
-      if (existing) continue;
+      const slug = slugify(ext.title).slice(0, 100) || ext.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 100);
 
       let authorId: string | undefined;
       if (ext.author) {
-        const authorSlug = ext.author.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        const { prisma } = await import('@/lib/prisma');
+        const authorSlug = slugify(ext.author);
         const author = await prisma.author.upsert({
           where: { name: ext.author },
           update: {},
@@ -74,25 +63,21 @@ export async function GET(request: NextRequest) {
         authorId = author.id;
       }
 
-      await prisma.book.create({
-        data: {
-          slug,
-          title: ext.title,
-          description: 'description' in ext ? (ext as { description?: string }).description ?? null : null,
-          coverImage: ext.coverUrl,
-          category: 'category' in ext ? (ext as { category?: string }).category ?? category ?? null : category ?? null,
-          source: ext.source ?? 'openlibrary',
-          externalId: ext.id,
-          authorId: authorId ?? null,
-        },
+      await upsertBook({
+        slug,
+        title: ext.title,
+        description: 'description' in ext ? (ext as { description?: string }).description ?? null : null,
+        coverImage: ext.coverUrl,
+        category: 'category' in ext ? (ext as { category?: string }).category ?? category ?? null : category ?? null,
+        source: ext.source ?? 'openlibrary',
+        externalId: ext.id,
+        authorId: authorId ?? null,
       });
       storedCount++;
     }
 
-    // Refresh from DB
     const refreshed = await searchBooks(q, { category, moodId, limit, offset });
 
-    // Cache the result
     await setCachedData(cacheKey, { source: 'external', total: refreshed.total }, 'search', 1800);
 
     return NextResponse.json({
