@@ -12,7 +12,7 @@
     "app/api/analytics/stats/route.ts": { "maxDuration": 30 },
     "app/api/books/content/route.ts": { "maxDuration": 30 },
     "app/api/books/library/route.ts": { "maxDuration": 30 },
-    "app/api/user/reading-progress/route.ts": { "maxDuration": 30 }
+    "app/api/user/reading-progress/route.ts": { "maxDuration": 30 },
     "app/api/ai/health/route.ts": { "maxDuration": 30 },
     "app/api/ai/env-check/route.ts": { "maxDuration": 30 },
     "app/api/moods/route.ts": { "maxDuration": 30 },
