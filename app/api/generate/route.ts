@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateLocalizedEpisodes } from '@/lib/groq';
 
-export const maxDuration = 300;
 import { getCache } from '@/lib/ai/cache';
+
+export const maxDuration = 300;
 import { getRouterState } from '@/lib/ai/router-state';
 import { RateLimiter } from '@/lib/rate-limiter';
 import { getClientIP, isWhitelisted } from '@/lib/ip-whitelist';
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
         _error: 'Generation failed. Please try again.',
         _debug: process.env.NODE_ENV === 'development' ? message : undefined,
       },
-      { status: 200 }
+      { status: 500 }
     );
   }
 }
@@ -140,7 +141,7 @@ async function executeGeneration(
           _model: result.model,
           _generationTime: generationTime,
         },
-        { status: 200 },
+        { status: 422 },
       );
     }
 
@@ -213,7 +214,7 @@ async function executeGeneration(
         },
         _debug: process.env.NODE_ENV === 'development' ? message : undefined,
       },
-      { status: 200 },
+      { status: 500 },
     );
   }
 }

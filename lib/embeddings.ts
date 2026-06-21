@@ -97,33 +97,39 @@ export async function findSimilarBooks(
       .slice(0, limit);
 
     return results;
-  } catch {
+  } catch (err) {
+    console.warn('[Embeddings] findSimilarBooks failed:', err);
     return [];
   }
 }
 
 export async function findExactOrSimilarBook(title: string): Promise<SimilarityResult | null> {
-  const normalized = normalize(title);
-  const fingerprint = computeTitleFingerprint(title);
+  try {
+    const normalized = normalize(title);
+    const fingerprint = computeTitleFingerprint(title);
 
-  const embeddings = await prisma.bookEmbedding.findMany({
-    include: { book: { select: { id: true, title: true, slug: true } } },
-  });
+    const embeddings = await prisma.bookEmbedding.findMany({
+      include: { book: { select: { id: true, title: true, slug: true } } },
+    });
 
-  for (const e of embeddings) {
-    const similarity = computeSimilarity(fingerprint, e.titleFingerprint);
-    const titleSim = jaccardSimilarity(normalized, normalize(e.book.title));
-    if (similarity >= 0.85 || titleSim >= 0.85) {
-      return {
-        bookId: e.bookId,
-        title: e.book.title,
-        slug: e.book.slug,
-        similarity: Math.max(similarity, titleSim),
-      };
+    for (const e of embeddings) {
+      const similarity = computeSimilarity(fingerprint, e.titleFingerprint);
+      const titleSim = jaccardSimilarity(normalized, normalize(e.book.title));
+      if (similarity >= 0.85 || titleSim >= 0.85) {
+        return {
+          bookId: e.bookId,
+          title: e.book.title,
+          slug: e.book.slug,
+          similarity: Math.max(similarity, titleSim),
+        };
+      }
     }
-  }
 
-  return null;
+    return null;
+  } catch (err) {
+    console.warn('[Embeddings] findExactOrSimilarBook failed:', err);
+    return null;
+  }
 }
 
 export async function saveBookEmbedding(
@@ -143,7 +149,7 @@ export async function saveBookEmbedding(
       update: { titleFingerprint: fingerprint, keywordFingerprint, searchVector },
       create: { bookId, titleFingerprint: fingerprint, keywordFingerprint, searchVector },
     });
-  } catch {
-    // non-critical
+  } catch (err) {
+    console.warn('[Embeddings] saveBookEmbedding failed:', err);
   }
 }

@@ -20,7 +20,8 @@ export interface BookMetadata {
 export async function searchBooks(query: string): Promise<BookMetadata[]> {
   try {
     const res = await fetch(
-      `${OPEN_LIBRARY_BASE}/search.json?q=${encodeURIComponent(query)}&limit=10`
+      `${OPEN_LIBRARY_BASE}/search.json?q=${encodeURIComponent(query)}&limit=10`,
+      { headers: { 'User-Agent': 'BookFlix/1.0' } }
     );
     if (!res.ok) {
       console.error('[OpenLibrary] searchBooks returned', res.status);
@@ -45,7 +46,9 @@ export async function searchBooks(query: string): Promise<BookMetadata[]> {
 
 export async function getBookDetails(workId: string): Promise<BookMetadata | null> {
   try {
-    const res = await fetch(`${OPEN_LIBRARY_BASE}/works/${workId}.json`);
+    const res = await fetch(`${OPEN_LIBRARY_BASE}/works/${workId}.json`, {
+      headers: { 'User-Agent': 'BookFlix/1.0' },
+    });
     if (!res.ok) return null;
     const data = await res.json();
     return {
@@ -88,7 +91,8 @@ export async function fetchPopularBooks(): Promise<PopularBook[]> {
   for (const [category, subject] of Object.entries(CATEGORY_SUBJECTS)) {
     try {
       const res = await fetch(
-        `${OPEN_LIBRARY_BASE}/subjects/${subject}.json?limit=5`
+        `${OPEN_LIBRARY_BASE}/subjects/${subject}.json?limit=5`,
+        { headers: { 'User-Agent': 'BookFlix/1.0' } }
       );
       if (!res.ok) continue;
       const data = await res.json();

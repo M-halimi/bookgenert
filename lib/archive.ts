@@ -24,6 +24,7 @@ export async function searchArchive(query: string): Promise<ArchiveBookResult[]>
 
     const res = await fetch(`${BASE}?${params}`, {
       signal: AbortSignal.timeout(5000),
+      headers: { 'User-Agent': 'BookFlix/1.0' },
     });
     if (!res.ok) return [];
 
@@ -50,7 +51,8 @@ export async function searchArchive(query: string): Promise<ArchiveBookResult[]>
         source: 'archive' as const,
       };
     });
-  } catch {
+  } catch (err) {
+    console.error('[Archive] searchArchive failed:', err);
     return [];
   }
 }

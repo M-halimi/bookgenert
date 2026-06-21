@@ -103,8 +103,8 @@ export async function GET(request: NextRequest) {
       offset: refreshed.offset,
       newBooksStored: storedCount,
     });
-  } catch {
-    // Return whatever we have from DB
+  } catch (err) {
+    console.error('[BookSearch] External fetch failed:', err);
     return NextResponse.json({
       source: 'database',
       books: dbResults.books,

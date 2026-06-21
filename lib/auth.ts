@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
 
-const API_SECRET_KEY = process.env.API_SECRET_KEY;
-
 export function getApiSecretKey(): string {
-  return API_SECRET_KEY || '';
+  return process.env.API_SECRET_KEY || '';
 }
 
 export function validateApiKey(key: string | null): boolean {
-  if (!API_SECRET_KEY) return true;
+  const secretKey = process.env.API_SECRET_KEY;
+  if (!secretKey) return false;
   if (!key) return false;
-  return key === API_SECRET_KEY;
+  return key === secretKey;
 }
 
 export function unauthorizedResponse(message = 'Unauthorized'): NextResponse {

@@ -2,18 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fetchSeedBooks } from '@/lib/seed/fetcher';
 import { generateAISeedBooks } from '@/lib/seed/ai-generator';
 import { getClientIP, isWhitelisted } from '@/lib/ip-whitelist';
+import { validateApiKey, unauthorizedResponse } from '@/lib/auth';
 
 export const maxDuration = 300;
 
 export async function GET(request: NextRequest) {
   const ip = getClientIP(request);
+  const apiKey = request.headers.get('x-api-key');
   const whitelisted = isWhitelisted(ip);
+  const authenticated = validateApiKey(apiKey);
 
-  if (!whitelisted) {
-    return NextResponse.json(
-      { error: 'Seed endpoint is restricted to whitelisted IPs only' },
-      { status: 403 }
-    );
+  if (!whitelisted && !authenticated) {
+    return unauthorizedResponse('Seed endpoint requires whitelisted IP or valid API key');
   }
 
   const sourceParam = request.nextUrl.searchParams.get('source') || 'external';

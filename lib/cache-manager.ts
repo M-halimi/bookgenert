@@ -70,7 +70,7 @@ export async function checkBookCache(
       wordCount: ch.wordCount,
     }));
 
-    const result: any = book.episodes;
+    const result: any = { ...(book.episodes as Record<string, unknown>) };
     result.id = book.id;
     result.slug = book.slug;
     result.chapters = chapters;
@@ -112,7 +112,7 @@ export async function checkBookCache(
         wordCount: ch.wordCount,
       }));
 
-      const result: any = similarBook.episodes;
+      const result: any = { ...(similarBook.episodes as Record<string, unknown>) };
       result.id = similarBook.id;
       result.slug = similarBook.slug;
       result.chapters = chapters;
@@ -274,8 +274,8 @@ async function updateCacheEntry(
       update: { data: data as any, bookId, expiresAt, hitCount: { increment: 1 } },
       create: { cacheKey, title, data: data as any, bookId, contentType: 'book', source: 'ai', expiresAt },
     });
-  } catch {
-    // non-critical
+  } catch (err) {
+    console.warn('[CacheManager] Failed to update cache entry:', err);
   }
 }
 
@@ -345,7 +345,7 @@ export async function trackAnalytics(
         metadata: data.metadata || null,
       },
     });
-  } catch {
-    // non-critical
+  } catch (err) {
+    console.warn('[Analytics] Failed to track event:', err);
   }
 }

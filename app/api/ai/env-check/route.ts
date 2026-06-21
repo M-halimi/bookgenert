@@ -4,13 +4,12 @@ import { getRouterState } from '@/lib/ai/router-state';
 import { getApiManager } from '@/lib/api-manager';
 
 function mask(s: string | undefined): string {
-  if (!s) return 'NOT SET';
-  if (s.length < 8) return 'SET (too short)';
-  return `${s.slice(0, 4)}...${s.slice(-4)}`;
+  return s ? '***SET***' : 'NOT SET';
 }
 
 export async function GET() {
-  const envVars = {
+  try {
+    const envVars = {
     groq: {
       key: mask(process.env.GROQ_API_KEY),
       model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile (default)',
@@ -56,7 +55,7 @@ export async function GET() {
     ollama: {
       url: process.env.OLLAMA_URL || 'http://localhost:11434 (default)',
       model: process.env.OLLAMA_MODEL || 'llama3 (default)',
-      configured: true,
+      configured: !!process.env.OLLAMA_URL || !!process.env.OLLAMA_MODEL,
     },
   };
 
@@ -89,6 +88,10 @@ export async function GET() {
     ),
     advice: getAdvice(envVars),
   });
+  } catch (err) {
+    console.error('[EnvCheck] Failed:', err);
+    return NextResponse.json({ error: 'Environment check failed' }, { status: 500 });
+  }
 }
 
 function getAdvice(envVars: Record<string, { configured: boolean; keyPrefix?: string }>): string[] {

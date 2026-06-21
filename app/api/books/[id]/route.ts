@@ -46,8 +46,8 @@ export async function GET(
         },
       });
     }
-  } catch {
-    // External fetch failed
+  } catch (err) {
+    console.error('[BookDetail] External fetch failed for', id, err);
   }
 
   return NextResponse.json(

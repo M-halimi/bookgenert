@@ -1,7 +1,7 @@
 {
   "functions": {
     "app/api/books/seed/route.ts": { "maxDuration": 120 },
-    "app/api/seed/books/route.ts": { "maxDuration": 120 },
+    "app/api/seed/books/route.ts": { "maxDuration": 300 },
     "app/api/generate/route.ts": { "maxDuration": 300 },
     "app/api/write/route.ts": { "maxDuration": 300 },
     "app/api/books/search/route.ts": { "maxDuration": 30 },
@@ -13,5 +13,11 @@
     "app/api/books/content/route.ts": { "maxDuration": 30 },
     "app/api/books/library/route.ts": { "maxDuration": 30 },
     "app/api/user/reading-progress/route.ts": { "maxDuration": 30 }
+    "app/api/ai/health/route.ts": { "maxDuration": 30 },
+    "app/api/ai/env-check/route.ts": { "maxDuration": 30 },
+    "app/api/moods/route.ts": { "maxDuration": 30 },
+    "app/api/write/status/route.ts": { "maxDuration": 30 },
+    "app/api/books/[id]/route.ts": { "maxDuration": 30 },
+    "app/api/admin/health/route.ts": { "maxDuration": 30 }
   }
 }

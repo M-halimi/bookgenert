@@ -1,9 +1,7 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { MOODS } from '../lib/moods';
 import { SEED_DATA } from '../lib/mood-seed';
 import type { MoodId } from '../lib/moods';
-
-const prisma = new PrismaClient();
 
 async function main() {
   console.log('Seeding database...\n');

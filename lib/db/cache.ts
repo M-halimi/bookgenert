@@ -15,7 +15,8 @@ export async function getCachedData<T>(key: string): Promise<T | null> {
     }
 
     return entry.data as unknown as T;
-  } catch {
+  } catch (err) {
+    console.warn('[Cache] Failed to get cached data:', err);
     return null;
   }
 }
@@ -33,8 +34,8 @@ export async function setCachedData(
       update: { data: data as never, source, expiresAt },
       create: { cacheKey: key, data: data as never, source, expiresAt },
     });
-  } catch {
-    // cache write failure is non-critical
+  } catch (err) {
+    console.warn('[Cache] Failed to set cached data:', err);
   }
 }
 
@@ -44,7 +45,8 @@ export async function clearExpiredCache() {
       where: { expiresAt: { lt: new Date() } },
     });
     return count;
-  } catch {
+  } catch (err) {
+    console.warn('[Cache] Failed to clear expired cache:', err);
     return 0;
   }
 }
@@ -55,7 +57,8 @@ export async function clearCacheBySource(source: string) {
       where: { source },
     });
     return count;
-  } catch {
+  } catch (err) {
+    console.warn('[Cache] Failed to clear cache by source:', err);
     return 0;
   }
 }

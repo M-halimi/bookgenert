@@ -3,9 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  directUrl         = env("DIRECT_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model User {
@@ -90,6 +91,7 @@ model Book {
   @@index([authorId])
   @@index([createdAt])
   @@index([generationStatus])
+  @@index([moodAnalyzed, description])
   @@map("books")
 }
 
@@ -113,7 +115,6 @@ model BookChapter {
   book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   @@unique([bookId, chapterNumber])
-  @@index([bookId])
   @@index([chapterNumber])
   @@map("book_chapters")
 }
@@ -165,7 +166,6 @@ model BookCache {
   expiresAt     DateTime @map("expires_at")
 
   @@index([expiresAt])
-  @@index([cacheKey])
   @@index([contentType])
   @@index([title])
   @@map("book_cache")
@@ -191,8 +191,7 @@ model BookGenerationJob {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  @@index([status])
-  @@index([createdAt])
+  @@index([status, createdAt])
   @@index([title])
   @@map("book_generation_jobs")
 }
@@ -235,11 +234,10 @@ model AnalyticsEvent {
   book Book?     @relation(fields: [bookId], references: [id], onDelete: SetNull)
   user User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  @@index([eventType])
+  @@index([eventType, createdAt])
   @@index([bookId])
   @@index([userId])
   @@index([category])
-  @@index([createdAt])
   @@map("analytics_events")
 }
 
@@ -252,7 +250,6 @@ model UserLibrary {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, bookId])
-  @@index([userId])
   @@map("user_library")
 }
 
@@ -283,8 +280,7 @@ model BookMood {
   mood Mood @relation(fields: [moodId], references: [id], onDelete: Cascade)
 
   @@id([bookId, moodId])
-  @@index([moodId])
-  @@index([score])
+  @@index([moodId, score])
   @@map("book_mood")
 }
 
@@ -304,7 +300,6 @@ model UserBook {
   book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   @@unique([userId, bookId])
-  @@index([userId])
   @@index([bookId])
   @@map("user_books")
 }
@@ -318,6 +313,5 @@ model ApiCache {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([expiresAt])
-  @@index([cacheKey])
   @@map("api_cache")
 }

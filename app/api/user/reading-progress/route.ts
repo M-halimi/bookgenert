@@ -34,7 +34,8 @@ export async function GET(request: NextRequest) {
 
     const progress = await getUserReadingProgress(userId, bookId);
     return NextResponse.json({ progress });
-  } catch {
+  } catch (err) {
+    console.error('[ReadingProgress] Failed to fetch:', err);
     return NextResponse.json(
       { error: 'Failed to fetch reading progress' },
       { status: 500 },
@@ -80,7 +81,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true, entry: result });
-  } catch {
+  } catch (err) {
+    console.error('[ReadingProgress] Failed to update:', err);
     return NextResponse.json(
       { error: 'Failed to update reading progress' },
       { status: 500 },
@@ -105,7 +107,8 @@ export async function DELETE(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (err) {
+    console.error('[ReadingProgress] Failed to delete:', err);
     return NextResponse.json({ error: 'Failed to delete reading progress' }, { status: 500 });
   }
 }

@@ -20,6 +20,7 @@ export async function searchGoogleBooks(query: string): Promise<GoogleBookResult
 
     const res = await fetch(`${BASE}?${params}`, {
       signal: AbortSignal.timeout(5000),
+      headers: { 'User-Agent': 'BookFlix/1.0' },
     });
     if (!res.ok) return [];
 

@@ -16,10 +16,8 @@
     "postinstall": "npx prisma generate"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.19.3",
     "@tailwindcss/postcss": "^4.0.0",
-    "groq-sdk": "^1.2.1",
     "next": "14.2.35",
     "react": "^18",
     "react-dom": "^18",

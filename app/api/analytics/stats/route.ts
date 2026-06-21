@@ -188,19 +188,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Analytics error:', error);
-    return NextResponse.json({
-      totalBooks: 0,
-      totalChapters: 0,
-      cacheHits: 0,
-      cacheSavings: 0,
-      totalGenerations: 0,
-      avgGenerationTime: 0,
-      providerMetrics: [],
-      fallbackCount: 0,
-      topCategories: [],
-      topBooks: [],
-      recentActivity: [],
-      generationTrend: [],
-    });
+    return NextResponse.json(
+      { error: 'Failed to fetch analytics', partial: false },
+      { status: 500 }
+    );
   }
 }
