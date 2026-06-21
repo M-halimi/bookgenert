@@ -1,0 +1,39 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  db-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check for DATABASE_URL secret
+        id: check-secret
+        run: echo "defined=${{ secrets.DATABASE_URL != '' }}" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Install dependencies
+        if: steps.check-secret.outputs.defined == 'true'
+        run: npm ci
+
+      - name: Run Prisma Generate
+        if: steps.check-secret.outputs.defined == 'true'
+        run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+
+      - name: Push Prisma Schema to Database
+        if: steps.check-secret.outputs.defined == 'true'
+        run: npx prisma db push --accept-data-loss
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
